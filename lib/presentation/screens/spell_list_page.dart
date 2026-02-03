@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spell_detail_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/bottom_panel_widget.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/spell_filter.dart';
 
 import '../../data/datasources/remote/dnd_api_service.dart';
@@ -90,63 +91,51 @@ class _SpellListPageState extends State<SpellListPage> {
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : Column(
-              children: [
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: spells.length,
-                    itemBuilder: (context, index) {
-                      final spell = spells[index];
+      body: Stack(
+        children: [
+          _buildSpellList(),
+          BottomPanelWidget(
+            onFavoritesTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const FavoritesPage()),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
 
-                      return Card(
-                        child: ListTile(
-                          title: Text(spell['name']),
-                          subtitle: Text('Index: ${spell['index']}'),
-                          trailing: const Icon(Icons.menu_book),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => SpellDetailPage(
-                                  spellIndex: spell['index'],
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                      );
-                    },
+  Widget _buildSpellList() {
+    if (isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.only(bottom: 90),
+      itemCount: spells.length,
+      itemBuilder: (context, index) {
+        final spell = spells[index];
+
+        return Card(
+          child: ListTile(
+            title: Text(spell['name']),
+            subtitle: Text('Index: ${spell['index']}'),
+            trailing: const Icon(Icons.menu_book),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => SpellDetailPage(
+                    spellIndex: spell['index'],
                   ),
                 ),
-                Container(
-                  height: 70,
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.surface,
-                    border: const Border(
-                      top: BorderSide(color: Colors.grey),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Favorito'),
-                      ElevatedButton.icon(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => FavoritesPage()),
-                          );
-                        },
-                        label: Text('teste'),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

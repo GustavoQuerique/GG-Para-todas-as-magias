@@ -20,7 +20,6 @@ class BottomPanelWidget extends StatefulWidget {
 
 class _BottomPanelWidgetState extends State<BottomPanelWidget> {
   bool isExpanded = false;
-  double get panelHeight => isExpanded ? 220 : 70;
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +28,8 @@ class _BottomPanelWidgetState extends State<BottomPanelWidget> {
       curve: Curves.easeOut,
       left: 0,
       right: 0,
-      bottom: 0,
-      height: panelHeight,
+      bottom: isExpanded ? 0 : -150,
+      height: 190,
       child: GestureDetector(
         onVerticalDragEnd: (details) {
           if (details.primaryVelocity == null) return;

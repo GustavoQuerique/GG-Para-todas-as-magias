@@ -30,14 +30,11 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-
   cupertino_icons: ^1.0.8
-
   http: ^1.2.0
-
   hive:
   hive_flutter:
-
+  fab_circular_menu_plus: 
 dev_dependencies:
   flutter_test:
     sdk: flutter

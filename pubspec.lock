@@ -185,6 +185,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.3.6"
+  fab_circular_menu_plus:
+    dependency: "direct main"
+    description:
+      name: fab_circular_menu_plus
+      sha256: "725f9c31d8008427b1f33d797f9a313fd19adb1f7d387d6f0456676228e57bb4"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.0.4"
   fake_async:
     dependency: transitive
     description:
