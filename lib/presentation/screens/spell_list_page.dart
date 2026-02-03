@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spell_detail_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/action_button.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/bottom_panel_widget.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/circular_action_menu.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/spell_filter.dart';
 
 import '../../data/datasources/remote/dnd_api_service.dart';
@@ -94,13 +96,40 @@ class _SpellListPageState extends State<SpellListPage> {
       body: Stack(
         children: [
           _buildSpellList(),
-          BottomPanelWidget(
-            onFavoritesTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const FavoritesPage()),
-              );
-            },
+          Positioned(
+            bottom: -50,
+            right: 125,
+            child: CircularActionMenu(
+              actions: [
+                ActionButton(
+                  icon: Icons.star,
+                  label: 'Favoritoss',
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const FavoritesPage(),
+                      ),
+                    );
+                  },
+                ),
+                ActionButton(
+                  icon: Icons.auto_fix_high,
+                  label: 'Criar Magia',
+                  onTap: () {},
+                ),
+                ActionButton(
+                  icon: Icons.person,
+                  label: 'Ficha',
+                  onTap: () {},
+                ),
+                ActionButton(
+                  icon: Icons.book,
+                  label: 'Díario',
+                  onTap: () {},
+                ),
+              ],
+            ),
           ),
         ],
       ),

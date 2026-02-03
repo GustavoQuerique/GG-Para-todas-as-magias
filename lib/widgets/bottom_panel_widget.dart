@@ -1,3 +1,6 @@
+//Eu gostei do design desse widget, mas não vou usar dentro da pagina inicial
+// talvez eu possa usar em outros lugares no futuro
+
 import 'package:flutter/material.dart';
 
 import '../presentation/screens/favorites/favorites_page.dart';
