@@ -20,7 +20,7 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
   bool isFavorite = false;
   final DndApiService api = DndApiService();
 
-  Map<String, dynamic>? spell;
+  SpellModel? spell;
   bool isLoading = true;
 
   @override
@@ -33,14 +33,14 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
     final data = await api.fetchSpellsDetail(widget.spellIndex);
 
     setState(() {
-      spell = data;
-      isFavorite = favoritesService.isFavorite(data['index']);
+      spell = SpellModel.fromJson(data);
+      isFavorite = favoritesService.isFavorite(spell!.index);
       isLoading = false;
     });
   }
 
   @override
-  Widget _info(String title, String value) {
+  Widget _info(String title, {String? value = ''}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text('$title: $value'),
@@ -58,17 +58,18 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
               isFavorite ? Icons.star : Icons.star_border,
             ),
             onPressed: () {
-              final index = spell!['index'];
+              final index = spell!.index;
 
               if (isFavorite) {
-                favoritesService.removeFavorite(spell!['index']);
+                favoritesService.removeFavorite(spell!.index);
               } else {
                 favoritesService.addFavorite(
                   SpellModel(
-                    index: spell!['index'],
-                    name: spell!['name'],
-                    school: spell!['school']['name'],
-                    level: spell!['level'],
+                    index: spell!.index,
+                    name: spell!.name,
+                    school: spell!.school,
+                    level: spell!.level,
+                    concentration: spell!.concentration,
                   ),
                 );
               }
@@ -90,18 +91,18 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    spell!['name'],
+                    spell!.name,
                     style: Theme.of(context).textTheme.headlineMedium,
                   ),
                   const SizedBox(height: 16),
 
-                  _info('Nível', spell!['level'].toString()),
-                  _info('Escola', spell!['school']['name']),
-                  _info('Alcance', spell!['range']),
-                  _info('Duração', spell!['duration']),
+                  _info('Nível', value: spell!.level.toString()),
+                  _info('Escola', value: spell!.school),
+                  _info('Alcance', value: spell!.range?.toString()),
+                  _info('Duração', value: spell!.duration?.toString()),
                   _info(
                     'Concentração',
-                    spell!['concentration'] ? 'Sim' : 'Não',
+                    value: spell!.concentration ? 'Sim' : 'Não',
                   ),
 
                   const SizedBox(height: 16),
@@ -116,10 +117,10 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
                   const SizedBox(height: 8),
 
                   ...List.generate(
-                    spell!['desc'].length,
+                    spell!.description.length,
                     (i) => Padding(
                       padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(spell!['desc'][i]),
+                      child: Text(spell!.description[i]),
                     ),
                   ),
                 ],

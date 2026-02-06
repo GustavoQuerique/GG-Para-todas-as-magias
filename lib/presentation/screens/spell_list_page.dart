@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/memory/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/create_spells/spell_creator.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_creator.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spell_detail_page.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/action_button.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/bottom_panel_widget.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/circular_action_menu.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/action_button.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/circular_action_menu.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/spell_filter.dart';
-
-import '../../data/datasources/remote/dnd_api_service.dart';
+import 'package:hive/hive.dart';
 
 class SpellListPage extends StatefulWidget {
   const SpellListPage({super.key});
@@ -21,40 +23,46 @@ class _SpellListPageState extends State<SpellListPage> {
   int? selectedLevel;
 
   final DndApiService api = DndApiService();
-  List spells = [];
+  List<Map<String, dynamic>> spells = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    loadSpells();
+    reloadSpells();
   }
 
-  Future<void> loadSpells() async {
-    final data = await api.fetchSpells();
-    setState(() {
-      spells = data;
-      isLoading = false;
-    });
-  }
-
-  Future<void> fetchSpellsWithFilter({
-    String? className,
-    String? school,
-    int? level,
-  }) async {
+  Future<void> reloadSpells() async {
     setState(() {
       isLoading = true;
     });
 
-    final data = await api.fetchSpells(
-      className: className,
-      school: school,
-      level: level,
+    // API
+    final apiSpells = await api.fetchSpells(
+      className: selectedClass,
+      school: selectedSchool,
+      level: selectedLevel,
     );
 
+    // (Hive)
+    final customBox = Hive.box<SpellModel>('spells');
+
+    final customSpells = customBox.values.map((spell) {
+      return {
+        'index': spell.index,
+        'name': spell.name,
+        'school': {'name': spell.school},
+        'level': spell.level,
+        'isCustom': true,
+      };
+    }).toList();
+
+    // 3️⃣ junta tudo
     setState(() {
-      spells = data;
+      spells = [
+        ...customSpells,
+        ...apiSpells,
+      ];
       isLoading = false;
     });
   }
@@ -65,6 +73,7 @@ class _SpellListPageState extends State<SpellListPage> {
       appBar: AppBar(
         title: const Text('Grimório Arcano'),
         actions: [
+          //Filtros
           IconButton(
             icon: Icon(Icons.filter_list_alt),
             onPressed: () {
@@ -81,11 +90,7 @@ class _SpellListPageState extends State<SpellListPage> {
                       selectedSchool = school;
                       selectedLevel = level;
                     });
-                    fetchSpellsWithFilter(
-                      className: className,
-                      school: school,
-                      level: level,
-                    );
+                    reloadSpells();
                   },
                 ),
               );
@@ -116,12 +121,30 @@ class _SpellListPageState extends State<SpellListPage> {
                 ActionButton(
                   icon: Icons.auto_fix_high,
                   label: 'Criar Magia',
-                  onTap: () {},
+                  onTap: () async {
+                    final created = await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SpellCreator(),
+                      ),
+                    );
+
+                    if (created == true) {
+                      reloadSpells();
+                    }
+                  },
                 ),
                 ActionButton(
                   icon: Icons.person,
                   label: 'Ficha',
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const SheetCreator(),
+                      ),
+                    );
+                  },
                 ),
                 ActionButton(
                   icon: Icons.book,
@@ -150,7 +173,11 @@ class _SpellListPageState extends State<SpellListPage> {
         return Card(
           child: ListTile(
             title: Text(spell['name']),
-            subtitle: Text('Index: ${spell['index']}'),
+            subtitle: Text(
+              spell['isCustom'] == true
+                  ? 'Magia personalizada'
+                  : 'Index: ${spell['index']}',
+            ),
             trailing: const Icon(Icons.menu_book),
             onTap: () {
               Navigator.push(

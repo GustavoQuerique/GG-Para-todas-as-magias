@@ -8,9 +8,11 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   await Hive.initFlutter();
+
   Hive.registerAdapter(SpellModelAdapter());
 
   await Hive.openBox<SpellModel>('favorites');
+  await Hive.openBox<SpellModel>('spells');
 
   runApp(const MyApp());
 }

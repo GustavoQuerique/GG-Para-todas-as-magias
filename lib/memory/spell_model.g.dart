@@ -21,13 +21,17 @@ class SpellModelAdapter extends TypeAdapter<SpellModel> {
       name: fields[1] as String,
       school: fields[2] as String,
       level: fields[3] as int,
+      range: fields[4] as int?,
+      concentration: fields[5] as bool,
+      duration: fields[6] as int?,
+      description: (fields[7] as List).cast<String>(),
     );
   }
 
   @override
   void write(BinaryWriter writer, SpellModel obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.index)
       ..writeByte(1)
@@ -35,7 +39,15 @@ class SpellModelAdapter extends TypeAdapter<SpellModel> {
       ..writeByte(2)
       ..write(obj.school)
       ..writeByte(3)
-      ..write(obj.level);
+      ..write(obj.level)
+      ..writeByte(4)
+      ..write(obj.range)
+      ..writeByte(5)
+      ..write(obj.concentration)
+      ..writeByte(6)
+      ..write(obj.duration)
+      ..writeByte(7)
+      ..write(obj.description);
   }
 
   @override
