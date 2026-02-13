@@ -22,8 +22,11 @@ class _SpellListPageState extends State<SpellListPage> {
   String? selectedSchool;
   int? selectedLevel;
 
+  final TextEditingController searchController = TextEditingController();
+
   final DndApiService api = DndApiService();
   List<Map<String, dynamic>> spells = [];
+  late List<Map<String, dynamic>> availableSpells = spells;
   bool isLoading = true;
 
   @override
@@ -37,34 +40,44 @@ class _SpellListPageState extends State<SpellListPage> {
       isLoading = true;
     });
 
-    // API
-    final apiSpells = await api.fetchSpells(
-      className: selectedClass,
-      school: selectedSchool,
-      level: selectedLevel,
-    );
+    try {
+      final customBox = Hive.box<SpellModel>('spells');
 
-    // (Hive)
-    final customBox = Hive.box<SpellModel>('spells');
+      final apiSpells = await api.fetchSpells(
+        className: selectedClass,
+        school: selectedSchool,
+        level: selectedLevel,
+      );
 
-    final customSpells = customBox.values.map((spell) {
-      return {
-        'index': spell.index,
-        'name': spell.name,
-        'school': {'name': spell.school},
-        'level': spell.level,
-        'isCustom': true,
-      };
-    }).toList();
+      print("API spells: ${apiSpells.length}");
 
-    // 3️⃣ junta tudo
-    setState(() {
-      spells = [
-        ...customSpells,
-        ...apiSpells,
-      ];
-      isLoading = false;
-    });
+      final customSpells = customBox.values.map((spell) {
+        return {
+          'index': spell.index,
+          'name': spell.name,
+          'school': {'name': spell.school},
+          'level': spell.level,
+          'isCustom': true,
+        };
+      }).toList();
+
+      setState(() {
+        spells = [
+          ...customSpells,
+          ...apiSpells,
+        ];
+        availableSpells = spells;
+        isLoading = false;
+      });
+
+      print("Total spells: ${spells.length}");
+    } catch (e) {
+      print("Erro ao carregar magias: $e");
+
+      setState(() {
+        isLoading = false;
+      });
+    }
   }
 
   @override
@@ -96,60 +109,69 @@ class _SpellListPageState extends State<SpellListPage> {
               );
             },
           ),
+          SizedBox(width: 10),
         ],
       ),
-      body: Stack(
+      body: Column(
         children: [
-          _buildSpellList(),
-          Positioned(
-            bottom: -50,
-            right: 125,
-            child: CircularActionMenu(
-              actions: [
-                ActionButton(
-                  icon: Icons.star,
-                  label: 'Favoritoss',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const FavoritesPage(),
-                      ),
-                    );
-                  },
-                ),
-                ActionButton(
-                  icon: Icons.auto_fix_high,
-                  label: 'Criar Magia',
-                  onTap: () async {
-                    final created = await Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SpellCreator(),
-                      ),
-                    );
+          _buildSearchBar(),
 
-                    if (created == true) {
-                      reloadSpells();
-                    }
-                  },
-                ),
-                ActionButton(
-                  icon: Icons.person,
-                  label: 'Ficha',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const SheetCreator(),
+          Expanded(
+            child: Stack(
+              children: [
+                _buildSpellList(),
+                Positioned(
+                  bottom: -50,
+                  right: 125,
+                  child: CircularActionMenu(
+                    actions: [
+                      ActionButton(
+                        icon: Icons.star,
+                        label: 'Favoritoss',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const FavoritesPage(),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                ),
-                ActionButton(
-                  icon: Icons.book,
-                  label: 'Díario',
-                  onTap: () {},
+                      ActionButton(
+                        icon: Icons.auto_fix_high,
+                        label: 'Criar Magia',
+                        onTap: () async {
+                          final created = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SpellCreator(),
+                            ),
+                          );
+
+                          if (created == true) {
+                            reloadSpells();
+                          }
+                        },
+                      ),
+                      ActionButton(
+                        icon: Icons.person,
+                        label: 'Ficha',
+                        onTap: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const SheetCreator(),
+                            ),
+                          );
+                        },
+                      ),
+                      ActionButton(
+                        icon: Icons.book,
+                        label: 'Díario',
+                        onTap: () {},
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -164,6 +186,10 @@ class _SpellListPageState extends State<SpellListPage> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    if (spells.isEmpty) {
+      return const Center(child: Text("Nenhuma magia encontrada"));
+    }
+
     return ListView.builder(
       padding: const EdgeInsets.only(bottom: 90),
       itemCount: spells.length,
@@ -174,13 +200,15 @@ class _SpellListPageState extends State<SpellListPage> {
           child: ListTile(
             title: Text(spell['name']),
             subtitle: Text(
-              spell['isCustom'] == true
-                  ? 'Magia personalizada'
-                  : 'Index: ${spell['index']}',
+              'Level: ${spell['level']}',
             ),
-            trailing: const Icon(Icons.menu_book),
-            onTap: () {
-              Navigator.push(
+            trailing: Icon(
+              spell['isCustom'] == true
+                  ? Icons.bookmark
+                  : Icons.menu_book_outlined,
+            ),
+            onTap: () async {
+              final deleted = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
                   builder: (_) => SpellDetailPage(
@@ -188,10 +216,50 @@ class _SpellListPageState extends State<SpellListPage> {
                   ),
                 ),
               );
+              if (deleted == true) {
+                reloadSpells();
+              }
             },
           ),
         );
       },
     );
+  }
+
+  Widget _buildSearchBar() {
+    return Padding(
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          const Icon(Icons.search_outlined),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: searchController,
+              onTapOutside: (event) =>
+                  FocusManager.instance.primaryFocus!.unfocus(),
+              decoration: const InputDecoration(
+                hintText: 'Pesquisar magia...',
+                border: OutlineInputBorder(),
+                isDense: true,
+              ),
+              onChanged: searchSpell,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void searchSpell(String query) {
+    final input = query.toLowerCase();
+
+    final suggestions = availableSpells.where((spell) {
+      return spell['name'].toLowerCase().contains(input);
+    }).toList();
+
+    setState(() {
+      spells = suggestions;
+    });
   }
 }

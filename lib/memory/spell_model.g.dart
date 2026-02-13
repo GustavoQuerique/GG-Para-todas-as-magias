@@ -21,9 +21,9 @@ class SpellModelAdapter extends TypeAdapter<SpellModel> {
       name: fields[1] as String,
       school: fields[2] as String,
       level: fields[3] as int,
-      range: fields[4] as int?,
+      range: fields[4] as String?,
       concentration: fields[5] as bool,
-      duration: fields[6] as int?,
+      duration: fields[6] as String?,
       description: (fields[7] as List).cast<String>(),
     );
   }

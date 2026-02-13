@@ -17,13 +17,13 @@ class SpellModel extends HiveObject {
   final int level;
 
   @HiveField(4)
-  final int? range;
+  final String? range;
 
   @HiveField(5)
   final bool concentration;
 
   @HiveField(6)
-  final int? duration;
+  final String? duration;
 
   @HiveField(7)
   final List<String> description;
@@ -48,10 +48,24 @@ class SpellModel extends HiveObject {
                 as String // padrão da D&D API
           : json['school'] as String, // padrão do custom
       level: json['level'] as int,
-      range: json['range'] as int?,
-      concentration: json['concentration'] as bool,
-      duration: json['duration'] as int?,
-      description: json['desc'] as List<String>,
+      range: json['range']?.toString(),
+      concentration: json['concentration'] ?? false,
+      duration: json['duration']?.toString(),
+      description:
+          //HOO LEE SHEET
+          (json['desc'] as List<dynamic>?)?.map((e) => e.toString()).toList() ??
+          [],
+    );
+  }
+
+  factory SpellModel.fromMap(Map<String, dynamic> map) {
+    return SpellModel(
+      index: map['index'],
+      name: map['name'],
+      school: map['school'],
+      level: map['level'],
+      description: map['description'],
+      concentration: false,
     );
   }
 }
