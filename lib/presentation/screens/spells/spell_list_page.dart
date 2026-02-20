@@ -3,8 +3,8 @@ import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_
 import 'package:guia_de_garlou_para_todas_as_magias/memory/spell_model.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/create_spells/spell_creator.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_creator.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spell_detail_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_viewer_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_detail_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/action_button.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/circular_action_menu.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/spell_filter.dart';
@@ -23,10 +23,11 @@ class _SpellListPageState extends State<SpellListPage> {
   int? selectedLevel;
 
   final TextEditingController searchController = TextEditingController();
-
   final DndApiService api = DndApiService();
-  List<Map<String, dynamic>> spells = [];
-  late List<Map<String, dynamic>> availableSpells = spells;
+
+  List<SpellModel> spells = [];
+  List<SpellModel> availableSpells = [];
+
   bool isLoading = true;
 
   @override
@@ -43,29 +44,36 @@ class _SpellListPageState extends State<SpellListPage> {
     try {
       final customBox = Hive.box<SpellModel>('spells');
 
+      /// API ainda retorna List<Map<String, dynamic>>
       final apiSpells = await api.fetchSpells(
         className: selectedClass,
         school: selectedSchool,
         level: selectedLevel,
       );
 
+      await Future.delayed(const Duration(seconds: 2));
+
       print("API spells: ${apiSpells.length}");
 
-      final customSpells = customBox.values.map((spell) {
-        return {
-          'index': spell.index,
-          'name': spell.name,
-          'school': {'name': spell.school},
-          'level': spell.level,
-          'isCustom': true,
-        };
+      /// Converte API spells → SpellModel
+      final convertedApiSpells = apiSpells.map<SpellModel>((spell) {
+        return SpellModel(
+          index: spell['index'],
+          name: spell['name'],
+          school: spell['school']?['name'] ?? '',
+          level: spell['level'] ?? 0,
+          description: const [],
+          concentration: false,
+        );
       }).toList();
 
+      if (!mounted) return;
       setState(() {
         spells = [
-          ...customSpells,
-          ...apiSpells,
+          ...customBox.values,
+          ...convertedApiSpells,
         ];
+
         availableSpells = spells;
         isLoading = false;
       });
@@ -86,9 +94,8 @@ class _SpellListPageState extends State<SpellListPage> {
       appBar: AppBar(
         title: const Text('Grimório Arcano'),
         actions: [
-          //Filtros
           IconButton(
-            icon: Icon(Icons.filter_list_alt),
+            icon: const Icon(Icons.filter_list_alt),
             onPressed: () {
               showModalBottomSheet(
                 context: context,
@@ -109,13 +116,12 @@ class _SpellListPageState extends State<SpellListPage> {
               );
             },
           ),
-          SizedBox(width: 10),
+          const SizedBox(width: 10),
         ],
       ),
       body: Column(
         children: [
           _buildSearchBar(),
-
           Expanded(
             child: Stack(
               children: [
@@ -127,7 +133,7 @@ class _SpellListPageState extends State<SpellListPage> {
                     actions: [
                       ActionButton(
                         icon: Icons.star,
-                        label: 'Favoritoss',
+                        label: 'Favoritos',
                         onTap: () {
                           Navigator.push(
                             context,
@@ -160,14 +166,14 @@ class _SpellListPageState extends State<SpellListPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => const SheetCreator(),
+                              builder: (_) => const SheetViewerPage(),
                             ),
                           );
                         },
                       ),
                       ActionButton(
                         icon: Icons.book,
-                        label: 'Díario',
+                        label: 'Diário',
                         onTap: () {},
                       ),
                     ],
@@ -198,12 +204,10 @@ class _SpellListPageState extends State<SpellListPage> {
 
         return Card(
           child: ListTile(
-            title: Text(spell['name']),
-            subtitle: Text(
-              'Level: ${spell['level']}',
-            ),
+            title: Text(spell.name),
+            subtitle: Text('Level: ${spell.level}'),
             trailing: Icon(
-              spell['isCustom'] == true
+              spell.index.startsWith('custom_')
                   ? Icons.bookmark
                   : Icons.menu_book_outlined,
             ),
@@ -212,10 +216,11 @@ class _SpellListPageState extends State<SpellListPage> {
                 context,
                 MaterialPageRoute(
                   builder: (_) => SpellDetailPage(
-                    spellIndex: spell['index'],
+                    spellIndex: spell.index,
                   ),
                 ),
               );
+
               if (deleted == true) {
                 reloadSpells();
               }
@@ -236,8 +241,6 @@ class _SpellListPageState extends State<SpellListPage> {
           Expanded(
             child: TextField(
               controller: searchController,
-              onTapOutside: (event) =>
-                  FocusManager.instance.primaryFocus!.unfocus(),
               decoration: const InputDecoration(
                 hintText: 'Pesquisar magia...',
                 border: OutlineInputBorder(),
@@ -255,7 +258,7 @@ class _SpellListPageState extends State<SpellListPage> {
     final input = query.toLowerCase();
 
     final suggestions = availableSpells.where((spell) {
-      return spell['name'].toLowerCase().contains(input);
+      return spell.name.toLowerCase().contains(input);
     }).toList();
 
     setState(() {

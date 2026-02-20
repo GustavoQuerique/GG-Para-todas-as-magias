@@ -1,0 +1,276 @@
+import 'package:guia_de_garlou_para_todas_as_magias/models/inventory_item.dart';
+import 'package:hive/hive.dart';
+
+part 'character_sheet.g.dart';
+
+@HiveType(typeId: 1)
+class CharacterSheet extends HiveObject {
+  //IDENTIDADE
+
+  @HiveField(0)
+  String name;
+
+  @HiveField(1)
+  int level;
+
+  @HiveField(2)
+  String? raceIndex; // ex: "elf"
+
+  @HiveField(3)
+  String? classIndex; // ex: "wizard"
+
+  @HiveField(4)
+  String? backgroundIndex;
+
+  @HiveField(5)
+  String? alignment;
+
+  // ATRIBUTOS
+
+  @HiveField(6)
+  int strength;
+
+  @HiveField(7)
+  int dexterity;
+
+  @HiveField(8)
+  int constitution;
+
+  @HiveField(9)
+  int intelligence;
+
+  @HiveField(10)
+  int wisdom;
+
+  @HiveField(11)
+  int charisma;
+
+  // COMBATE
+
+  @HiveField(12)
+  int armorClass;
+
+  @HiveField(13)
+  int maxHp;
+
+  @HiveField(14)
+  int currentHp;
+
+  // LISTAS
+
+  @HiveField(15)
+  List<String> proficientSkills;
+
+  @HiveField(16)
+  Map<int, List<String>> spellsByLevel;
+
+  @HiveField(17)
+  List<InventoryItem> inventory;
+
+  @HiveField(18)
+  int copper;
+
+  @HiveField(19)
+  int silver;
+
+  @HiveField(20)
+  int electrum;
+
+  @HiveField(21)
+  int gold;
+
+  @HiveField(22)
+  int platinum;
+
+  CharacterSheet({
+    required this.name,
+    required this.level,
+    required this.strength,
+    required this.dexterity,
+    required this.constitution,
+    required this.intelligence,
+    required this.wisdom,
+    required this.charisma,
+    required this.armorClass,
+    required this.maxHp,
+    required this.currentHp,
+    this.raceIndex,
+    this.classIndex,
+    this.backgroundIndex,
+    this.alignment,
+    List<String>? proficientSkills,
+    Map<int, List<String>>? spellsByLevel,
+    List<InventoryItem>? inventory,
+    this.copper = 0,
+    this.silver = 0,
+    this.electrum = 0,
+    this.gold = 0,
+    this.platinum = 0,
+  }) : proficientSkills = proficientSkills ?? [],
+       spellsByLevel =
+           spellsByLevel ??
+           {
+             for (int i = 0; i <= 9; i++) i: [],
+           },
+       inventory = inventory ?? [];
+
+  //Getters
+
+  double get carryingCapacity => strength * 15;
+
+  double get currentWeight =>
+      inventory.fold(0, (sum, item) => sum + item.totalWeight);
+
+  double get weightRatio =>
+      carryingCapacity == 0 ? 0 : currentWeight / carryingCapacity;
+
+  int get proficiencyBonus {
+    if (level >= 17) return 6;
+    if (level >= 13) return 5;
+    if (level >= 9) return 4;
+    if (level >= 5) return 3;
+    return 2;
+  }
+
+  int get strengthMod => _modifier(strength);
+  int get dexterityMod => _modifier(dexterity);
+  int get constitutionMod => _modifier(constitution);
+  int get intelligenceMod => _modifier(intelligence);
+  int get wisdomMod => _modifier(wisdom);
+  int get charismaMod => _modifier(charisma);
+
+  int _modifier(int value) {
+    return ((value - 10) / 2).floor();
+  }
+
+  //
+  // FACTORY PADRÃO (Criar ficha nova)
+  //
+
+  factory CharacterSheet.empty() {
+    return CharacterSheet(
+      name: "Novo Personagem",
+      level: 1,
+      strength: 10,
+      dexterity: 10,
+      constitution: 10,
+      intelligence: 10,
+      wisdom: 10,
+      charisma: 10,
+      armorClass: 10,
+      maxHp: 10,
+      currentHp: 10,
+    );
+  }
+
+  //
+  // FACTORY PARA IMPORTAR JSON (se precisar no futuro)
+  //
+
+  factory CharacterSheet.fromJson(Map<String, dynamic> json) {
+    //Spells
+    Map<int, List<String>> parsedSpells = {for (int i = 0; i <= 9; i++) i: []};
+
+    if (json['spellsByLevel'] != null) {
+      final rawMap = Map<String, dynamic>.from(json['spellsByLevel']);
+
+      rawMap.forEach((key, value) {
+        final level = int.tryParse(key);
+        if (level != null) {
+          parsedSpells[level] = List<String>.from(value);
+        }
+      });
+    }
+
+    //Inventory
+    List<InventoryItem> parsedInventory = [];
+
+    if (json['inventory'] != null) {
+      parsedInventory = (json['inventory'] as List)
+          .map(
+            (item) => InventoryItem(
+              name: item['name'],
+              weight: (item['weight'] as num).toDouble(),
+              quantity: item['quantity'],
+            ),
+          )
+          .toList();
+    }
+
+    return CharacterSheet(
+      name: json['name'],
+      level: json['level'],
+      raceIndex: json['raceIndex'],
+      classIndex: json['classIndex'],
+      backgroundIndex: json['backgroundIndex'],
+      alignment: json['alignment'],
+      strength: json['strength'],
+      dexterity: json['dexterity'],
+      constitution: json['constitution'],
+      intelligence: json['intelligence'],
+      wisdom: json['wisdom'],
+      charisma: json['charisma'],
+      armorClass: json['armorClass'],
+      maxHp: json['maxHp'],
+      currentHp: json['currentHp'],
+      proficientSkills: List<String>.from(json['proficientSkills'] ?? []),
+      spellsByLevel: parsedSpells,
+      inventory: parsedInventory,
+
+      // 💰 Moedas
+      copper: json['copper'] ?? 0,
+      silver: json['silver'] ?? 0,
+      electrum: json['electrum'] ?? 0,
+      gold: json['gold'] ?? 0,
+      platinum: json['platinum'] ?? 0,
+    );
+  }
+
+  //
+  // CONVERTER PARA MAP (Export / Backup)
+  //
+
+  Map<String, dynamic> toMap() {
+    return {
+      'name': name,
+      'level': level,
+      'raceIndex': raceIndex,
+      'classIndex': classIndex,
+      'backgroundIndex': backgroundIndex,
+      'alignment': alignment,
+      'strength': strength,
+      'dexterity': dexterity,
+      'constitution': constitution,
+      'intelligence': intelligence,
+      'wisdom': wisdom,
+      'charisma': charisma,
+      'armorClass': armorClass,
+      'maxHp': maxHp,
+      'currentHp': currentHp,
+      'proficientSkills': proficientSkills,
+
+      //Spells
+      'spellsByLevel': spellsByLevel.map(
+        (key, value) => MapEntry(key.toString(), value),
+      ),
+
+      //Inventory
+      'inventory': inventory
+          .map(
+            (item) => {
+              'name': item.name,
+              'weight': item.weight,
+              'quantity': item.quantity,
+            },
+          )
+          .toList(),
+
+      //Moedas
+      'copper': copper,
+      'silver': silver,
+      'electrum': electrum,
+      'gold': gold,
+      'platinum': platinum,
+    };
+  }
+}
