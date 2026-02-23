@@ -1,7 +1,17 @@
+import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory_item.dart';
 import 'package:hive/hive.dart';
 
 part 'character_sheet.g.dart';
+
+@HiveType(typeId: 3)
+enum WeightUnit {
+  @HiveField(0)
+  lb,
+
+  @HiveField(1)
+  kg,
+}
 
 @HiveType(typeId: 1)
 class CharacterSheet extends HiveObject {
@@ -82,6 +92,34 @@ class CharacterSheet extends HiveObject {
   @HiveField(22)
   int platinum;
 
+  @HiveField(23)
+  WeightUnit weightUnit;
+
+  //MOVIMENTO
+
+  @HiveField(24)
+  int initiative;
+
+  @HiveField(25)
+  int speed;
+
+  //ROLEPLAY
+
+  @HiveField(26)
+  String? personalityTraits;
+
+  @HiveField(27)
+  String? ideals;
+
+  @HiveField(28)
+  String? bonds;
+
+  @HiveField(29)
+  String? flaws;
+
+  @HiveField(30)
+  String? backStory;
+
   CharacterSheet({
     required this.name,
     required this.level,
@@ -98,6 +136,7 @@ class CharacterSheet extends HiveObject {
     this.classIndex,
     this.backgroundIndex,
     this.alignment,
+    this.weightUnit = WeightUnit.lb,
     List<String>? proficientSkills,
     Map<int, List<String>>? spellsByLevel,
     List<InventoryItem>? inventory,
@@ -106,6 +145,13 @@ class CharacterSheet extends HiveObject {
     this.electrum = 0,
     this.gold = 0,
     this.platinum = 0,
+    this.initiative = 0,
+    this.speed = 9,
+    this.personalityTraits,
+    this.ideals,
+    this.flaws,
+    this.bonds,
+    this.backStory,
   }) : proficientSkills = proficientSkills ?? [],
        spellsByLevel =
            spellsByLevel ??
@@ -123,6 +169,26 @@ class CharacterSheet extends HiveObject {
 
   double get weightRatio =>
       carryingCapacity == 0 ? 0 : currentWeight / carryingCapacity;
+
+  late final ValueNotifier<WeightUnit> weightUnitNotifier = ValueNotifier(
+    weightUnit,
+  );
+
+  void toggleWeightUnit() {
+    weightUnit = weightUnit == WeightUnit.lb ? WeightUnit.kg : WeightUnit.lb;
+
+    weightUnitNotifier.value = weightUnit;
+    save();
+  }
+
+  double convertWeight(double valueInLb) {
+    if (weightUnit == WeightUnit.kg) {
+      return valueInLb * 0.453592;
+    }
+    return valueInLb;
+  }
+
+  String get weightLabel => weightUnit == WeightUnit.kg ? "kg" : "lb";
 
   int get proficiencyBonus {
     if (level >= 17) return 6;
@@ -216,13 +282,25 @@ class CharacterSheet extends HiveObject {
       proficientSkills: List<String>.from(json['proficientSkills'] ?? []),
       spellsByLevel: parsedSpells,
       inventory: parsedInventory,
+      weightUnit: json['weightUnit'] == 'kg' ? WeightUnit.kg : WeightUnit.lb,
 
-      // 💰 Moedas
+      //  Moedas
       copper: json['copper'] ?? 0,
       silver: json['silver'] ?? 0,
       electrum: json['electrum'] ?? 0,
       gold: json['gold'] ?? 0,
       platinum: json['platinum'] ?? 0,
+
+      // Movimento
+      speed: json['speed'],
+      initiative: json['initiative'],
+
+      // Roleplay
+      personalityTraits: json['personalityTraits'],
+      ideals: json['ideals'],
+      bonds: json['bonds'],
+      flaws: json['flaws'],
+      backStory: json['backStory'],
     );
   }
 
@@ -255,6 +333,7 @@ class CharacterSheet extends HiveObject {
       ),
 
       //Inventory
+      'weightUnit': weightUnit.name,
       'inventory': inventory
           .map(
             (item) => {
@@ -271,6 +350,17 @@ class CharacterSheet extends HiveObject {
       'electrum': electrum,
       'gold': gold,
       'platinum': platinum,
+
+      //Movimento
+      'speed': speed,
+      'initiative': initiative,
+
+      //Roleplay
+      'personalityTraits': personalityTraits,
+      'ideals': ideals,
+      'bonds': bonds,
+      'flaws': flaws,
+      'backStory': backStory,
     };
   }
 }

@@ -1,3 +1,7 @@
+///TODO: se possivel adicionar uma opção de gerar
+///um personagem completamente aleatorio;
+///mas primeiro preciso terminar os modelos das tabs.
+
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import '../../../models/character_sheet.dart';

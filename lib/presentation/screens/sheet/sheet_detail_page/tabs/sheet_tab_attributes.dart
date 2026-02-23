@@ -1,4 +1,6 @@
+///mudar a aparencia da tela, passando o valor dos atributos para baixo
 import 'package:flutter/material.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
 import '../../../../../models/character_sheet.dart';
 
 class SheetTabAttributes extends StatefulWidget {
@@ -25,39 +27,43 @@ class _SheetTabAttributesState extends State<SheetTabAttributes> {
       margin: const EdgeInsets.symmetric(vertical: 8),
       child: Padding(
         padding: const EdgeInsets.all(16),
-        child: Row(
+        child: Column(
           children: [
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-            Column(
+            Row(
               children: [
-                const Text("Mod"),
-                Text(
-                  modifier >= 0 ? "+$modifier" : "$modifier",
-                  style: const TextStyle(fontSize: 16),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                Column(
+                  children: [
+                    const Text("Mod"),
+                    Text(
+                      modifier >= 0 ? "+$modifier" : "$modifier",
+                      style: const TextStyle(fontSize: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 20),
+                SizedBox(
+                  width: 60,
+                  child: TextFormField(
+                    initialValue: value.toString(),
+                    keyboardType: TextInputType.number,
+                    textAlign: TextAlign.center,
+                    onChanged: (val) {
+                      final parsed = int.tryParse(val) ?? 10;
+                      onChanged(parsed);
+                      setState(() {});
+                    },
+                  ),
                 ),
               ],
-            ),
-            const SizedBox(width: 20),
-            SizedBox(
-              width: 60,
-              child: TextFormField(
-                initialValue: value.toString(),
-                keyboardType: TextInputType.number,
-                textAlign: TextAlign.center,
-                onChanged: (val) {
-                  final parsed = int.tryParse(val) ?? 10;
-                  onChanged(parsed);
-                  setState(() {});
-                },
-              ),
             ),
           ],
         ),
@@ -103,6 +109,22 @@ class _SheetTabAttributesState extends State<SheetTabAttributes> {
               "Carisma",
               sheet.charisma,
               (v) => sheet.charisma = v,
+            ),
+            const SizedBox(height: 20),
+
+            MedievalCard(
+              child: SizedBox(
+                child: Column(
+                  children: [
+                    Text('Cálculo de Modificadores'),
+                    Text(
+                      '•Modificador = (Atributo - 10) ÷ 2 (arredondado para- baixo)'
+                      '\n•Exemplo: 16 FOR = + 3 modificador'
+                      '\n•Exemplo: 8 DES = - 1 modificador',
+                    ),
+                  ],
+                ),
+              ),
             ),
           ],
         ),

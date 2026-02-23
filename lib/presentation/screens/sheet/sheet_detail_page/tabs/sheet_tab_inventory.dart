@@ -1,3 +1,11 @@
+///TODO: colcoar um 'boneco' onde o usuario possa escolher
+///os equipamentos do personagem como: arma em qual mão
+///equipamento reseva e armadura.
+///adcionar uma pequena tabela de valores dentro das moedas para
+///simplificar a ideia de valor dos itens
+///Seria bom também colcoar uma tab separada para os tesouros do player
+///coisas além de itens, mas sim casas e outras info do tipo
+
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory_item.dart';
@@ -150,29 +158,57 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
             const SizedBox(height: 16),
 
             //PESO
-            Card(
-              child: Padding(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    const Text(
-                      "Capacidade de Carga",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+            ValueListenableBuilder<WeightUnit>(
+              valueListenable: sheet.weightUnitNotifier,
+              builder: (context, unit, _) {
+                final current = sheet.convertWeight(sheet.currentWeight);
+
+                final capacity = sheet.convertWeight(sheet.carryingCapacity);
+
+                return Card(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Column(
+                      children: [
+                        const Text(
+                          "Capacidade de Carga",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+
+                        const SizedBox(height: 12),
+
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Text("lb"),
+                            Switch(
+                              value: unit == WeightUnit.kg,
+                              onChanged: (_) => sheet.toggleWeightUnit(),
+                            ),
+                            const Text("kg"),
+                          ],
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        Text(
+                          "${current.toStringAsFixed(1)} ${sheet.weightLabel} / "
+                          "${capacity.toStringAsFixed(1)} ${sheet.weightLabel}",
+                        ),
+
+                        const SizedBox(height: 8),
+
+                        LinearProgressIndicator(
+                          value: sheet.weightRatio.clamp(0, 1),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 12),
-                    Text(
-                      "${sheet.currentWeight.toStringAsFixed(1)} lb / ${sheet.carryingCapacity} lb",
-                    ),
-                    const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      value: sheet.weightRatio.clamp(0, 1),
-                    ),
-                  ],
-                ),
-              ),
+                  ),
+                );
+              },
             ),
 
             const SizedBox(height: 16),
@@ -186,7 +222,7 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
                 child: ListTile(
                   title: Text(item.name),
                   subtitle: Text(
-                    "Qtd: ${item.quantity} | ${item.totalWeight} lb",
+                    "Qtd: ${item.quantity} | ${sheet.convertWeight(item.totalWeight).toStringAsFixed(1)} ${sheet.weightLabel}",
                   ),
                   trailing: IconButton(
                     icon: const Icon(Icons.delete),

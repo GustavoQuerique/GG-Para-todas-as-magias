@@ -20,17 +20,36 @@ class InlineEditableField extends StatefulWidget {
 
 class _InlineEditableFieldState extends State<InlineEditableField> {
   late TextEditingController controller;
+  late FocusNode focusNode;
   bool editing = false;
 
   @override
   void initState() {
     super.initState();
     controller = TextEditingController(text: widget.value);
+    focusNode = FocusNode();
+    focusNode.addListener(() {
+      if (!focusNode.hasFocus && editing) {
+        save();
+      }
+    });
   }
 
   void save() {
+    if (!editing) return;
+
+    if (controller.text != widget.value) {
+      widget.onChanged(controller.text);
+    }
+
     setState(() => editing = false);
-    widget.onChanged(controller.text);
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    focusNode.dispose();
+    super.dispose();
   }
 
   @override
@@ -45,14 +64,14 @@ class _InlineEditableFieldState extends State<InlineEditableField> {
   Widget build(BuildContext context) {
     if (editing) {
       return SizedBox(
-        width: 80,
+        width: 200,
         child: TextField(
           controller: controller,
+          focusNode: focusNode,
           autofocus: true,
           keyboardType: widget.keyboardType,
           style: widget.style,
           onSubmitted: (_) => save(),
-          onEditingComplete: save,
           decoration: const InputDecoration(
             isDense: true,
             border: UnderlineInputBorder(),
@@ -64,7 +83,7 @@ class _InlineEditableFieldState extends State<InlineEditableField> {
     return GestureDetector(
       onTap: () => setState(() => editing = true),
       child: Text(
-        widget.value,
+        widget.value.isEmpty ? "-" : widget.value,
         style: widget.style,
       ),
     );

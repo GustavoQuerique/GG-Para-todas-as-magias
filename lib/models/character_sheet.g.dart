@@ -32,6 +32,7 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
       classIndex: fields[3] as String?,
       backgroundIndex: fields[4] as String?,
       alignment: fields[5] as String?,
+      weightUnit: fields[23] as WeightUnit,
       proficientSkills: (fields[15] as List?)?.cast<String>(),
       spellsByLevel: (fields[16] as Map?)?.map((dynamic k, dynamic v) =>
           MapEntry(k as int, (v as List).cast<String>())),
@@ -41,13 +42,20 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
       electrum: fields[20] as int,
       gold: fields[21] as int,
       platinum: fields[22] as int,
+      initiative: fields[24] as int,
+      speed: fields[25] as int,
+      personalityTraits: fields[26] as String?,
+      ideals: fields[27] as String?,
+      flaws: fields[29] as String?,
+      bonds: fields[28] as String?,
+      backStory: fields[30] as String?,
     );
   }
 
   @override
   void write(BinaryWriter writer, CharacterSheet obj) {
     writer
-      ..writeByte(23)
+      ..writeByte(31)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -93,7 +101,23 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
       ..writeByte(21)
       ..write(obj.gold)
       ..writeByte(22)
-      ..write(obj.platinum);
+      ..write(obj.platinum)
+      ..writeByte(23)
+      ..write(obj.weightUnit)
+      ..writeByte(24)
+      ..write(obj.initiative)
+      ..writeByte(25)
+      ..write(obj.speed)
+      ..writeByte(26)
+      ..write(obj.personalityTraits)
+      ..writeByte(27)
+      ..write(obj.ideals)
+      ..writeByte(28)
+      ..write(obj.bonds)
+      ..writeByte(29)
+      ..write(obj.flaws)
+      ..writeByte(30)
+      ..write(obj.backStory);
   }
 
   @override
@@ -103,6 +127,45 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
   bool operator ==(Object other) =>
       identical(this, other) ||
       other is CharacterSheetAdapter &&
+          runtimeType == other.runtimeType &&
+          typeId == other.typeId;
+}
+
+class WeightUnitAdapter extends TypeAdapter<WeightUnit> {
+  @override
+  final int typeId = 3;
+
+  @override
+  WeightUnit read(BinaryReader reader) {
+    switch (reader.readByte()) {
+      case 0:
+        return WeightUnit.lb;
+      case 1:
+        return WeightUnit.kg;
+      default:
+        return WeightUnit.lb;
+    }
+  }
+
+  @override
+  void write(BinaryWriter writer, WeightUnit obj) {
+    switch (obj) {
+      case WeightUnit.lb:
+        writer.writeByte(0);
+        break;
+      case WeightUnit.kg:
+        writer.writeByte(1);
+        break;
+    }
+  }
+
+  @override
+  int get hashCode => typeId.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is WeightUnitAdapter &&
           runtimeType == other.runtimeType &&
           typeId == other.typeId;
 }

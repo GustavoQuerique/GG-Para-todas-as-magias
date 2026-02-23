@@ -15,6 +15,7 @@ void main() async {
   Hive.registerAdapter(SpellModelAdapter());
   Hive.registerAdapter(CharacterSheetAdapter());
   Hive.registerAdapter(InventoryItemAdapter());
+  Hive.registerAdapter(WeightUnitAdapter());
 
   await Hive.openBox<SpellModel>('favorites');
   await Hive.openBox<SpellModel>('spells');

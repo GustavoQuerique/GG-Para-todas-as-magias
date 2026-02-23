@@ -1,3 +1,7 @@
+///TOODO: trocar a forma de pesquisa/adicionar maiga
+///fazer as magias reativas a lista (tocou nela vai para descrição)
+/// adicionar slotes de maigas disponiveis baseado no lv
+
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';

@@ -1,3 +1,7 @@
+///TODO: adicionar os testes de resistência
+///percepção passiva,
+///e outras proficiencias e linguas
+
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
 
@@ -26,7 +30,7 @@ class _SheetTabSkillsState extends State<SheetTabSkills> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: isProficient
-            ? Colors.amber.withOpacity(0.15)
+            ? Colors.amber.withValues(alpha: 0.15)
             : Colors.transparent,
         borderRadius: BorderRadius.circular(12),
       ),
