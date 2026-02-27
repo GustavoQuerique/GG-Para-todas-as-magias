@@ -1,7 +1,10 @@
 ///TODO: adicionar ataques e magias rapidas e as personalidades do personagem
 
 import 'package:flutter/material.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/class_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/inline_editable_field.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
 
@@ -15,10 +18,29 @@ class SheetTabBase extends StatefulWidget {
 }
 
 class _SheetTabBaseState extends State<SheetTabBase> {
+  List<DndClass> availableClasses = [];
+  bool isLoadingClasses = true;
   int _deathSuccesses = 0;
   int _deathFailures = 0;
 
+  final classRepository = ClassRepository();
+
   CharacterSheet get sheet => widget.sheet;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadClasses();
+  }
+
+  Future<void> _loadClasses() async {
+    final classes = await classRepository.getClasses();
+
+    setState(() {
+      availableClasses = classes;
+      isLoadingClasses = false;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,16 +113,7 @@ class _SheetTabBaseState extends State<SheetTabBase> {
 
                 const Divider(),
 
-                _buildInfoRow(
-                  title: "Classe",
-                  value: sheet.classIndex ?? "Não definida",
-                  onChanged: (val) {
-                    setState(() {
-                      sheet.classIndex = val;
-                      sheet.save();
-                    });
-                  },
-                ),
+                _buildClassDropdown(),
 
                 const Divider(),
 
@@ -121,51 +134,6 @@ class _SheetTabBaseState extends State<SheetTabBase> {
           const SizedBox(height: 16),
 
           /// VIDA
-          // MedievalCard(
-          //   child: Column(
-          //     children: [
-          //       _buildInfoRow(
-          //         title: "Classe de Armadura",
-          //         value: sheet.armorClass.toString(),
-          //         keyboardType: TextInputType.number,
-          //         onChanged: (val) {
-          //           setState(() {
-          //             sheet.armorClass = int.tryParse(val) ?? sheet.armorClass;
-          //             sheet.save();
-          //           });
-          //         },
-          //       ),
-          //
-          //       const Divider(),
-          //
-          //       _buildInfoRow(
-          //         title: "Vida Máxima",
-          //         value: sheet.maxHp.toString(),
-          //         keyboardType: TextInputType.number,
-          //         onChanged: (val) {
-          //           setState(() {
-          //             sheet.maxHp = int.tryParse(val) ?? sheet.maxHp;
-          //             sheet.save();
-          //           });
-          //         },
-          //       ),
-          //
-          //       const Divider(),
-          //
-          //       _buildInfoRow(
-          //         title: "Vida Atual",
-          //         value: sheet.currentHp.toString(),
-          //         keyboardType: TextInputType.number,
-          //         onChanged: (val) {
-          //           setState(() {
-          //             sheet.currentHp = int.tryParse(val) ?? sheet.currentHp;
-          //             sheet.save();
-          //           });
-          //         },
-          //       ),
-          //     ],
-          //   ),
-          // ),
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -566,6 +534,38 @@ class _SheetTabBaseState extends State<SheetTabBase> {
           ),
         ],
       ),
+    );
+  }
+
+  ///Dropdown para escolher as classes disponiveis
+  Widget _buildClassDropdown() {
+    final sheet = widget.sheet;
+
+    if (isLoadingClasses) {
+      return const CircularProgressIndicator();
+    }
+
+    return DropdownButtonFormField<String>(
+      initialValue: sheet.classIndex,
+      decoration: const InputDecoration(
+        labelText: "Classe",
+        border: OutlineInputBorder(),
+      ),
+      items: availableClasses.map((dndClass) {
+        return DropdownMenuItem<String>(
+          value: dndClass.index,
+          child: Text(dndClass.name),
+        );
+      }).toList(),
+      onChanged: (value) async {
+        if (value == null) return;
+
+        sheet.classIndex = value;
+
+        await sheet.save();
+
+        setState(() {});
+      },
     );
   }
 }

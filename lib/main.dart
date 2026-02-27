@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/core/theme/app_theme.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/memory/spell_model.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_list_page.dart';
 import 'package:hive_flutter/adapters.dart';
 

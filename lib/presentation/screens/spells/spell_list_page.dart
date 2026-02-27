@@ -129,54 +129,58 @@ class _SpellListPageState extends State<SpellListPage> {
                 Positioned(
                   bottom: -50,
                   right: 125,
-                  child: CircularActionMenu(
-                    actions: [
-                      ActionButton(
-                        icon: Icons.star,
-                        label: 'Favoritos',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const FavoritesPage(),
-                            ),
-                          );
-                        },
-                      ),
-                      ActionButton(
-                        icon: Icons.auto_fix_high,
-                        label: 'Criar Magia',
-                        onTap: () async {
-                          final created = await Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SpellCreator(),
-                            ),
-                          );
 
-                          if (created == true) {
-                            reloadSpells();
-                          }
-                        },
-                      ),
-                      ActionButton(
-                        icon: Icons.person,
-                        label: 'Ficha',
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => const SheetViewerPage(),
-                            ),
-                          );
-                        },
-                      ),
-                      ActionButton(
-                        icon: Icons.book,
-                        label: 'Diário',
-                        onTap: () {},
-                      ),
-                    ],
+                  ///Talvez vale a pena mover isso para outro lugar
+                  child: SafeArea(
+                    child: CircularActionMenu(
+                      actions: [
+                        ActionButton(
+                          icon: Icons.star,
+                          label: 'Favoritos',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const FavoritesPage(),
+                              ),
+                            );
+                          },
+                        ),
+                        ActionButton(
+                          icon: Icons.auto_fix_high,
+                          label: 'Criar Magia',
+                          onTap: () async {
+                            final created = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SpellCreator(),
+                              ),
+                            );
+
+                            if (created == true) {
+                              reloadSpells();
+                            }
+                          },
+                        ),
+                        ActionButton(
+                          icon: Icons.person,
+                          label: 'Ficha',
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const SheetViewerPage(),
+                              ),
+                            );
+                          },
+                        ),
+                        ActionButton(
+                          icon: Icons.book,
+                          label: 'Diário',
+                          onTap: () {},
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ],

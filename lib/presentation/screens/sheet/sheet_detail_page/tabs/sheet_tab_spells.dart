@@ -1,10 +1,13 @@
-///TOODO: trocar a forma de pesquisa/adicionar maiga
+///TOODO: trocar a forma de pesquisa/adicionar magia
 ///fazer as magias reativas a lista (tocou nela vai para descrição)
 /// adicionar slotes de maigas disponiveis baseado no lv
 
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_slot_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_detail_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 
 class SheetTabSpells extends StatefulWidget {
   final CharacterSheet sheet;
@@ -16,16 +19,32 @@ class SheetTabSpells extends StatefulWidget {
 }
 
 class _SheetTabSpellsState extends State<SheetTabSpells> {
-  BoxDecoration cardDecoration() {
-    return BoxDecoration(
-      color: const Color(0xFF1E293B),
-      borderRadius: BorderRadius.circular(16),
-      border: Border.all(color: const Color(0xFF334155)),
+  final spellSlotRepository = SpellSlotRepository();
+  final api = DndApiService();
+
+  Map<int, int> availableSlots = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSpellSlots();
+  }
+
+  Future<void> _loadSpellSlots() async {
+    if (widget.sheet.classIndex == null) return;
+
+    final slots = await spellSlotRepository.getSpellSlots(
+      classIndex: widget.sheet.classIndex!,
+      level: widget.sheet.level,
     );
+
+    setState(() {
+      availableSlots = slots;
+    });
   }
 
   void selectSpell(int level) async {
-    final spells = await DndApiService().fetchSpells();
+    final spells = await api.fetchSpells(level: level);
 
     if (!mounted) return;
 
@@ -42,9 +61,7 @@ class _SheetTabSpellsState extends State<SheetTabSpells> {
               title: Text(spell['name']),
               onTap: () {
                 setState(() {
-                  widget.sheet.spellsByLevel[level]!.add(
-                    spell['index'],
-                  ); // salva o index
+                  widget.sheet.spellsByLevel[level]!.add(spell['index']);
                   widget.sheet.save();
                 });
                 Navigator.pop(context);
@@ -58,54 +75,125 @@ class _SheetTabSpellsState extends State<SheetTabSpells> {
 
   Widget buildSpellLevel(int level) {
     final spells = widget.sheet.spellsByLevel[level]!;
+    final totalSlots = availableSlots[level] ?? 0;
+    final usedSlots = widget.sheet.spellSlots[level] ?? 0;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: cardDecoration(),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                level == 0 ? "Truques" : "Nível $level",
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
+    final remaining = totalSlots - usedSlots;
+
+    if (level > 0 && totalSlots == 0) return const SizedBox();
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: MedievalCard(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            /// HEADER
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  level == 0 ? "Truques" : "Nível $level",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.add),
-                onPressed: () => selectSpell(level),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-
-          if (spells.isEmpty)
-            const Text(
-              "Nenhuma magia adicionada",
-              style: TextStyle(fontSize: 12),
+                if (level > 0)
+                  TextButton(
+                    child: Text('Resetar'),
+                    onPressed: () {
+                      setState(() {
+                        widget.sheet.spellSlots[level] = 0;
+                        widget.sheet.save();
+                      });
+                    },
+                  ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () => selectSpell(level),
+                ),
+              ],
             ),
 
-          ...spells.map((spellIndex) {
-            return ListTile(
-              contentPadding: EdgeInsets.zero,
-              title: Text(spellIndex),
-              trailing: IconButton(
-                icon: const Icon(Icons.delete),
-                onPressed: () {
-                  setState(() {
-                    spells.remove(spellIndex);
-                    widget.sheet.save();
-                  });
-                },
+            /// SLOT BAR (somente se não for truque)
+            if (level > 0)
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text("Slots: $remaining / $totalSlots"),
+                  const SizedBox(height: 6),
+                  LinearProgressIndicator(
+                    value: totalSlots == 0 ? 0 : usedSlots / totalSlots,
+                  ),
+                  const SizedBox(height: 12),
+                ],
               ),
-            );
-          }),
-        ],
+
+            if (spells.isEmpty)
+              const Text(
+                "Nenhuma magia adicionada",
+                style: TextStyle(fontSize: 12),
+              ),
+
+            ...spells.map((spellIndex) {
+              ///Abri descrição da magia
+              return MedievalCard(
+                child: ListTile(
+                  contentPadding: EdgeInsets.zero,
+                  title: Text(spellIndex),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => SpellDetailPage(spellIndex: spellIndex),
+                      ),
+                    );
+                  },
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      if (level > 0)
+                        IconButton(
+                          icon: const Icon(Icons.flash_on),
+                          onPressed: () {
+                            if (remaining <= 0) return;
+
+                            setState(() {
+                              widget.sheet.spellSlots[level] = usedSlots + 1;
+                              widget.sheet.save();
+                            });
+                          },
+                        ),
+
+                      if (level > 0)
+                        IconButton(
+                          icon: Icon(Icons.restart_alt),
+                          onPressed: () {
+                            if (remaining == totalSlots) return;
+
+                            setState(() {
+                              widget.sheet.spellSlots[level] = usedSlots - 1;
+                              widget.sheet.save();
+                            });
+                          },
+                        ),
+                      IconButton(
+                        icon: const Icon(Icons.delete),
+                        onPressed: () {
+                          setState(() {
+                            spells.remove(spellIndex);
+                            widget.sheet.save();
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
       ),
     );
   }
@@ -113,13 +201,11 @@ class _SheetTabSpellsState extends State<SheetTabSpells> {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: SingleChildScrollView(
+      child: ListView(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          children: List.generate(
-            10,
-            (level) => buildSpellLevel(level),
-          ),
+        children: List.generate(
+          10,
+          (level) => buildSpellLevel(level),
         ),
       ),
     );

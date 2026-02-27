@@ -49,13 +49,17 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
       flaws: fields[29] as String?,
       bonds: fields[28] as String?,
       backStory: fields[30] as String?,
+      spellSlots: (fields[31] as Map?)?.cast<int, int>(),
+      inventoryGridItems: (fields[32] as List?)
+          ?.map((dynamic e) => (e as Map).cast<String, dynamic>())
+          ?.toList(),
     );
   }
 
   @override
   void write(BinaryWriter writer, CharacterSheet obj) {
     writer
-      ..writeByte(31)
+      ..writeByte(33)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -117,7 +121,11 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
       ..writeByte(29)
       ..write(obj.flaws)
       ..writeByte(30)
-      ..write(obj.backStory);
+      ..write(obj.backStory)
+      ..writeByte(31)
+      ..write(obj.spellSlots)
+      ..writeByte(32)
+      ..write(obj.inventoryGridItems);
   }
 
   @override

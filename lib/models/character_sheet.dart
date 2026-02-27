@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_container.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
 import 'package:hive/hive.dart';
 
 part 'character_sheet.g.dart';
@@ -120,6 +121,14 @@ class CharacterSheet extends HiveObject {
   @HiveField(30)
   String? backStory;
 
+  //FETCHSPELLSLOTS
+
+  @HiveField(31)
+  Map<int, int> spellSlots;
+
+  @HiveField(32)
+  List<Map<String, dynamic>> inventoryGridItems = [];
+
   CharacterSheet({
     required this.name,
     required this.level,
@@ -152,12 +161,15 @@ class CharacterSheet extends HiveObject {
     this.flaws,
     this.bonds,
     this.backStory,
+    Map<int, int>? spellSlots,
+    List<Map<String, dynamic>>? inventoryGridItems,
   }) : proficientSkills = proficientSkills ?? [],
        spellsByLevel =
            spellsByLevel ??
            {
              for (int i = 0; i <= 9; i++) i: [],
            },
+       spellSlots = spellSlots ?? {},
        inventory = inventory ?? [];
 
   //Getters
@@ -248,6 +260,19 @@ class CharacterSheet extends HiveObject {
       });
     }
 
+    Map<int, int> parsedSpellSlots = {};
+
+    if (json['spellSlots'] != null) {
+      final raw = Map<String, dynamic>.from(json['spellSlots']);
+
+      raw.forEach((key, value) {
+        final level = int.tryParse(key);
+        if (level != null) {
+          parsedSpellSlots[level] = value;
+        }
+      });
+    }
+
     //Inventory
     List<InventoryItem> parsedInventory = [];
 
@@ -301,6 +326,13 @@ class CharacterSheet extends HiveObject {
       bonds: json['bonds'],
       flaws: json['flaws'],
       backStory: json['backStory'],
+
+      //SpellSlots
+      spellSlots: parsedSpellSlots,
+
+      inventoryGridItems: List<Map<String, dynamic>>.from(
+        json['inventoryGridItem'] ?? [],
+      ),
     );
   }
 
@@ -329,6 +361,9 @@ class CharacterSheet extends HiveObject {
 
       //Spells
       'spellsByLevel': spellsByLevel.map(
+        (key, value) => MapEntry(key.toString(), value),
+      ),
+      'spellSlots': spellSlots.map(
         (key, value) => MapEntry(key.toString(), value),
       ),
 
@@ -361,6 +396,8 @@ class CharacterSheet extends HiveObject {
       'bonds': bonds,
       'flaws': flaws,
       'backStory': backStory,
+
+      'inventoryGridItems': inventoryGridItems,
     };
   }
 }
