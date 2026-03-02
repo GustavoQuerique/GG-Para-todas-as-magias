@@ -129,6 +129,9 @@ class CharacterSheet extends HiveObject {
   @HiveField(32)
   List<Map<String, dynamic>> inventoryGridItems = [];
 
+  @HiveField(33)
+  int inventoryTypeIndex;
+
   CharacterSheet({
     required this.name,
     required this.level,
@@ -163,6 +166,7 @@ class CharacterSheet extends HiveObject {
     this.backStory,
     Map<int, int>? spellSlots,
     List<Map<String, dynamic>>? inventoryGridItems,
+    int? inventoryTypeIndex,
   }) : proficientSkills = proficientSkills ?? [],
        spellsByLevel =
            spellsByLevel ??
@@ -170,12 +174,16 @@ class CharacterSheet extends HiveObject {
              for (int i = 0; i <= 9; i++) i: [],
            },
        spellSlots = spellSlots ?? {},
-       inventory = inventory ?? [];
+       inventory = inventory ?? [],
+       inventoryGridItems = inventoryGridItems ?? [],
+       inventoryTypeIndex =
+           inventoryTypeIndex ?? InventoryType.mediumBackpack.index;
 
   //Getters
 
   double get carryingCapacity => strength * 15;
 
+  ///deprecated
   double get currentWeight =>
       inventory.fold(0, (sum, item) => sum + item.totalWeight);
 
@@ -333,6 +341,8 @@ class CharacterSheet extends HiveObject {
       inventoryGridItems: List<Map<String, dynamic>>.from(
         json['inventoryGridItem'] ?? [],
       ),
+      inventoryTypeIndex:
+          json['inventoryTypeIndex'] ?? InventoryType.mediumBackpack.index,
     );
   }
 
@@ -398,6 +408,7 @@ class CharacterSheet extends HiveObject {
       'backStory': backStory,
 
       'inventoryGridItems': inventoryGridItems,
+      'inventoryTypeIndex': inventoryTypeIndex,
     };
   }
 }

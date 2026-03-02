@@ -10,6 +10,7 @@ import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_c
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_item_instance.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_manager.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
 
 class SheetTabInventory extends StatefulWidget {
   final CharacterSheet sheet;
@@ -23,6 +24,7 @@ class SheetTabInventory extends StatefulWidget {
 class _SheetTabInventoryState extends State<SheetTabInventory> {
   late InventoryManager inventoryManager;
   final GlobalKey _gridKey = GlobalKey();
+  final GlobalKey _trashKey = GlobalKey();
   InventoryItemInstance? draggingItem;
   Offset? dragOffset;
   Offset? dragPosition;
@@ -31,98 +33,13 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
   @override
   void initState() {
     super.initState();
-    inventoryManager = InventoryManager(InventoryType.mediumBackpack);
+    selectedType = InventoryType.values[widget.sheet.inventoryTypeIndex];
+
+    inventoryManager = InventoryManager(selectedType);
 
     if (widget.sheet.inventoryGridItems.isNotEmpty) {
       inventoryManager.importItems(widget.sheet.inventoryGridItems);
     }
-  }
-
-  // ADICIONAR ITEM AO GRID
-  void addItem() {
-    final nameController = TextEditingController();
-    final weightController = TextEditingController();
-    final quantityController = TextEditingController(text: "1");
-    final widthController = TextEditingController(text: "1");
-    final heightController = TextEditingController(text: "1");
-
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text("Adicionar Item"),
-        content: SingleChildScrollView(
-          child: Column(
-            children: [
-              TextField(
-                controller: nameController,
-                decoration: const InputDecoration(labelText: "Nome"),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: weightController,
-                decoration: const InputDecoration(labelText: "Peso (lb)"),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: quantityController,
-                decoration: const InputDecoration(labelText: "Quantidade"),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: widthController,
-                decoration: const InputDecoration(labelText: "Largura (grid)"),
-                keyboardType: TextInputType.number,
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: heightController,
-                decoration: const InputDecoration(labelText: "Altura (grid)"),
-                keyboardType: TextInputType.number,
-              ),
-            ],
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () {
-              final name = nameController.text.trim();
-              final weight = double.tryParse(weightController.text) ?? 0;
-              final quantity = int.tryParse(quantityController.text) ?? 1;
-              final width = int.tryParse(widthController.text) ?? 1;
-              final height = int.tryParse(heightController.text) ?? 1;
-
-              if (name.isEmpty) return;
-
-              final newItem = InventoryItemInstance(
-                baseItem: InventoryItem(
-                  name: name,
-                  weight: weight,
-                  quantity: quantity,
-                ),
-                width: width,
-                height: height,
-              );
-
-              final added = inventoryManager.addItem(newItem);
-
-              if (!added) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text("Não há espaço suficiente no inventário."),
-                  ),
-                );
-              }
-
-              setState(() {});
-              Navigator.pop(context);
-            },
-            child: const Text("Adicionar"),
-          ),
-        ],
-      ),
-    );
   }
 
   //
@@ -188,7 +105,9 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
               ValueListenableBuilder<WeightUnit>(
                 valueListenable: sheet.weightUnitNotifier,
                 builder: (context, unit, _) {
-                  final current = sheet.convertWeight(sheet.currentWeight);
+                  final current = sheet.convertWeight(
+                    inventoryManager.totalWeight,
+                  );
                   final capacity = sheet.convertWeight(sheet.carryingCapacity);
 
                   return Card(
@@ -222,7 +141,10 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
                           ),
                           const SizedBox(height: 8),
                           LinearProgressIndicator(
-                            value: sheet.weightRatio.clamp(0, 1),
+                            value:
+                                (inventoryManager.totalWeight /
+                                        sheet.carryingCapacity)
+                                    .clamp(0, 1),
                           ),
                         ],
                       ),
@@ -278,8 +200,34 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
               const SizedBox(height: 16),
 
               SizedBox(
-                height: 400,
-                child: buildInventoryGrid(),
+                height: 480,
+                child: Stack(
+                  alignment: Alignment.bottomCenter,
+                  children: [
+                    AnimatedPadding(
+                      duration: const Duration(milliseconds: 200),
+                      padding: EdgeInsets.only(
+                        bottom: draggingItem != null ? 80 : 0,
+                      ),
+                      child: SizedBox(
+                        height: 400,
+                        child: buildInventoryGrid(),
+                      ),
+                    ),
+
+                    AnimatedOpacity(
+                      opacity: draggingItem != null ? 1 : 0,
+                      duration: const Duration(milliseconds: 200),
+                      child: IgnorePointer(
+                        ignoring: draggingItem == null,
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: buildTrash(),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -366,11 +314,121 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
               },
             ),
 
-            // ITENS AGRUPADOS
+            /// ITENS AGRUPADOS
             ..._buildPositionedItems(cellSize),
           ],
         );
       },
+    );
+  }
+
+  // ADICIONAR ITEM AO GRID
+  void addItem() {
+    final nameController = TextEditingController();
+    final weightController = TextEditingController();
+    final iskg = widget.sheet.weightUnit == WeightUnit.kg;
+    final quantityController = TextEditingController(text: "1");
+    final widthController = TextEditingController(text: "1");
+    final heightController = TextEditingController(text: "1");
+
+    showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Adicionar Item"),
+        content: SingleChildScrollView(
+          child: Column(
+            children: [
+              MedievalCard(
+                child: TextField(
+                  controller: nameController,
+                  decoration: const InputDecoration(labelText: "Nome"),
+                ),
+              ),
+              const SizedBox(height: 12),
+              MedievalCard(
+                child: TextField(
+                  controller: weightController,
+                  decoration: InputDecoration(
+                    labelText: iskg ? "Peso (kg)" : "Peso (lb)",
+                  ),
+                  keyboardType: TextInputType.number,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: widthController,
+                decoration: const InputDecoration(
+                  labelText: "Largura (grid)",
+                  enabledBorder: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: heightController,
+                decoration: const InputDecoration(
+                  labelText: "Altura (grid)",
+                  enabledBorder: OutlineInputBorder(),
+                ),
+                keyboardType: TextInputType.number,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              final name = nameController.text.trim();
+              double enteredWeight =
+                  double.tryParse(weightController.text) ?? 0;
+              final quantity = int.tryParse(quantityController.text) ?? 1;
+              final width = int.tryParse(widthController.text) ?? 1;
+              final height = int.tryParse(heightController.text) ?? 1;
+
+              final weightInLb = iskg
+                  ? enteredWeight / 0.453592
+                  : enteredWeight;
+
+              if (name.isEmpty) return;
+
+              final newItem = InventoryItemInstance(
+                baseItem: InventoryItem(
+                  name: name,
+                  weight: weightInLb,
+                  quantity: quantity,
+                ),
+                width: width,
+                height: height,
+              );
+
+              final added = inventoryManager.addItem(
+                newItem,
+                maxCapacity: widget.sheet.carryingCapacity,
+                ignoreWeight: false, //Se true permite que passe do peso maximo
+              );
+
+              if (!added) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text("Não há espaço suficiente no inventário."),
+                  ),
+                );
+              }
+
+              setState(() {});
+
+              widget.sheet.inventoryGridItems = inventoryManager.exportItems();
+
+              widget.sheet.inventoryTypeIndex = selectedType.index;
+
+              widget.sheet.save();
+
+              Navigator.pop(context);
+            },
+            child: const Text("Adicionar"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -389,7 +447,7 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
         if (item != null && !renderedItems.contains(item)) {
           renderedItems.add(item);
 
-          final isDragging = draggingItem == item;
+          bool isDragging = draggingItem == item;
 
           widgets.add(
             Positioned(
@@ -432,7 +490,39 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
                   });
                 },
                 onPanEnd: (_) {
-                  if (draggingItem != null && dragPosition != null) {
+                  if (draggingItem == null || dragPosition == null) return;
+
+                  final gridBox =
+                      _gridKey.currentContext!.findRenderObject() as RenderBox;
+
+                  final trashBox =
+                      _trashKey.currentContext?.findRenderObject()
+                          as RenderBox?;
+
+                  // Converte posição local do grid para GLOBAL
+                  final globalDropPosition = gridBox.localToGlobal(
+                    dragPosition!,
+                  );
+
+                  bool droppedOnTrash = false;
+
+                  if (trashBox != null) {
+                    final trashPosition = trashBox.localToGlobal(Offset.zero);
+
+                    final trashSize = trashBox.size;
+
+                    droppedOnTrash =
+                        globalDropPosition.dx >= trashPosition.dx &&
+                        globalDropPosition.dx <=
+                            trashPosition.dx + trashSize.width &&
+                        globalDropPosition.dy >= trashPosition.dy &&
+                        globalDropPosition.dy <=
+                            trashPosition.dy + trashSize.height;
+                  }
+
+                  if (droppedOnTrash) {
+                    inventoryManager.removeItem(draggingItem!);
+                  } else {
                     final newCol =
                         ((dragPosition!.dx - dragOffset!.dx) / cellSize)
                             .round();
@@ -446,36 +536,39 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
                       newRow,
                       newCol,
                     );
-
-                    setState(() {
-                      draggingItem = null;
-                      dragOffset = null;
-                      dragPosition = null;
-
-                      widget.sheet.inventoryGridItems = inventoryManager
-                          .exportItems();
-
-                      widget.sheet.save();
-                    });
                   }
+
+                  setState(() {
+                    draggingItem = null;
+                    dragOffset = null;
+                    dragPosition = null;
+                  });
+
+                  widget.sheet.inventoryGridItems = inventoryManager
+                      .exportItems();
+                  widget.sheet.save();
                 },
-                child: Opacity(
-                  opacity: isDragging ? 0.85 : 1,
-                  child: Container(
-                    margin: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      color: Colors.blueGrey.shade700,
-                      border: Border.all(color: Colors.white70),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Center(
-                      child: Text(
-                        item.baseItem.name,
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
+
+                child: IgnorePointer(
+                  ignoring: isDragging,
+                  child: Opacity(
+                    opacity: isDragging ? 0.85 : 1,
+                    child: Container(
+                      margin: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.blueGrey.shade700,
+                        border: Border.all(color: Colors.white70),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Center(
+                        child: Text(
+                          item.baseItem.name,
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
@@ -512,6 +605,8 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
       selectedType = newType;
       inventoryManager = newManager;
 
+      widget.sheet.inventoryTypeIndex = newType.index;
+
       widget.sheet.inventoryGridItems = inventoryManager.exportItems();
 
       widget.sheet.save();
@@ -526,5 +621,22 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
         ),
       );
     }
+  }
+
+  Widget buildTrash() {
+    return Container(
+      key: _trashKey,
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        color: Colors.red.shade700,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: const Icon(
+        Icons.delete,
+        color: Colors.white,
+        size: 40,
+      ),
+    );
   }
 }

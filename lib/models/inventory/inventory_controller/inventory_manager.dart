@@ -13,7 +13,20 @@ class InventoryManager {
     movement = InventoryMovement(container: grid.container, grid: grid.grid);
   }
 
-  bool addItem(InventoryItemInstance item) {
+  ///Novo addItem que bloqueia se passar do peso
+  bool addItem(
+    InventoryItemInstance item, {
+    double? maxCapacity,
+    bool ignoreWeight = false,
+  }) {
+    //Regra de peso
+    if (!ignoreWeight && maxCapacity != null) {
+      if (totalWeight + item.baseItem.totalWeight > maxCapacity) {
+        return false;
+      }
+    }
+
+    //Regra espacial
     for (int row = 0; row < grid.container.rows; row++) {
       for (int col = 0; col < grid.container.columns; col++) {
         if (grid.canPlaceItem(item, row, col)) {
@@ -21,6 +34,7 @@ class InventoryManager {
         }
       }
     }
+
     return false;
   }
 
@@ -54,5 +68,35 @@ class InventoryManager {
 
       movement.placeItem(item, item.posX, item.posY);
     }
+  }
+
+  void removeItem(InventoryItemInstance item) {
+    for (int r = 0; r < grid.container.rows; r++) {
+      for (int c = 0; c < grid.container.columns; c++) {
+        if (grid.grid[r][c] == item) {
+          grid.grid[r][c] = null;
+        }
+      }
+    }
+  }
+
+  double get totalWeight {
+    final uniqueItems = <InventoryItemInstance>{};
+
+    for (var row in grid.grid) {
+      for (var cell in row) {
+        if (cell != null) {
+          uniqueItems.add(cell);
+        }
+      }
+    }
+
+    double sum = 0;
+
+    for (var item in uniqueItems) {
+      sum += item.baseItem.totalWeight;
+    }
+
+    return sum;
   }
 }
