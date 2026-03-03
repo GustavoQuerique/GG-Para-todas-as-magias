@@ -99,4 +99,13 @@ class InventoryManager {
 
     return sum;
   }
+
+  bool contains(InventoryItemInstance item) {
+    for (var row in grid.grid) {
+      for (var cell in row) {
+        if (cell == item) return true;
+      }
+    }
+    return false;
+  }
 }

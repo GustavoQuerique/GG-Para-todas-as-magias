@@ -54,13 +54,15 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
           ?.map((dynamic e) => (e as Map).cast<String, dynamic>())
           ?.toList(),
       inventoryTypeIndex: fields[33] as int?,
+      equippedItems: (fields[34] as Map?)?.map((dynamic k, dynamic v) =>
+          MapEntry(k as String, (v as Map).cast<String, dynamic>())),
     );
   }
 
   @override
   void write(BinaryWriter writer, CharacterSheet obj) {
     writer
-      ..writeByte(34)
+      ..writeByte(35)
       ..writeByte(0)
       ..write(obj.name)
       ..writeByte(1)
@@ -128,7 +130,9 @@ class CharacterSheetAdapter extends TypeAdapter<CharacterSheet> {
       ..writeByte(32)
       ..write(obj.inventoryGridItems)
       ..writeByte(33)
-      ..write(obj.inventoryTypeIndex);
+      ..write(obj.inventoryTypeIndex)
+      ..writeByte(34)
+      ..write(obj.equippedItems);
   }
 
   @override

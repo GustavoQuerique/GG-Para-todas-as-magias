@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_container.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_item_instance.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_detail_page/tabs/sheet_tab_inventory_equipment/equipment_section.dart';
 import 'package:hive/hive.dart';
 
 part 'character_sheet.g.dart';
@@ -132,6 +134,9 @@ class CharacterSheet extends HiveObject {
   @HiveField(33)
   int inventoryTypeIndex;
 
+  @HiveField(34)
+  Map<String, Map<String, dynamic>?> equippedItems = {};
+
   CharacterSheet({
     required this.name,
     required this.level,
@@ -167,6 +172,7 @@ class CharacterSheet extends HiveObject {
     Map<int, int>? spellSlots,
     List<Map<String, dynamic>>? inventoryGridItems,
     int? inventoryTypeIndex,
+    Map<String, Map<String, dynamic>>? equippedItems,
   }) : proficientSkills = proficientSkills ?? [],
        spellsByLevel =
            spellsByLevel ??
@@ -177,7 +183,8 @@ class CharacterSheet extends HiveObject {
        inventory = inventory ?? [],
        inventoryGridItems = inventoryGridItems ?? [],
        inventoryTypeIndex =
-           inventoryTypeIndex ?? InventoryType.mediumBackpack.index;
+           inventoryTypeIndex ?? InventoryType.mediumBackpack.index,
+       equippedItems = equippedItems ?? {};
 
   //Getters
 
@@ -227,6 +234,33 @@ class CharacterSheet extends HiveObject {
 
   int _modifier(int value) {
     return ((value - 10) / 2).floor();
+  }
+
+  //helper dos equipamentos
+  Map<EquipmentSlot, InventoryItemInstance?> get getEquippedItemsParsed {
+    final result = <EquipmentSlot, InventoryItemInstance?>{};
+
+    for (var slot in EquipmentSlot.values) {
+      final json = equippedItems[slot.name];
+
+      if (json != null) {
+        result[slot] = InventoryItemInstance.fromJson(json);
+      } else {
+        result[slot] = null;
+      }
+    }
+
+    return result;
+  }
+
+  void updateEquippedItemsFromParsed(
+    Map<EquipmentSlot, InventoryItemInstance?> parsed,
+  ) {
+    equippedItems.clear();
+
+    for (var entry in parsed.entries) {
+      equippedItems[entry.key.name] = entry.value?.toJson();
+    }
   }
 
   //
@@ -341,6 +375,11 @@ class CharacterSheet extends HiveObject {
       inventoryGridItems: List<Map<String, dynamic>>.from(
         json['inventoryGridItem'] ?? [],
       ),
+
+      equippedItems: Map<String, Map<String, dynamic>>.from(
+        json['equippedItems'],
+      ),
+
       inventoryTypeIndex:
           json['inventoryTypeIndex'] ?? InventoryType.mediumBackpack.index,
     );
@@ -409,6 +448,8 @@ class CharacterSheet extends HiveObject {
 
       'inventoryGridItems': inventoryGridItems,
       'inventoryTypeIndex': inventoryTypeIndex,
+
+      'equippedItems': equippedItems,
     };
   }
 }

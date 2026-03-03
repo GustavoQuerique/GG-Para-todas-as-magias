@@ -1,8 +1,6 @@
-///TODO: fazer com que os itens do grid afetem a capacidade de carga
-///Almentar o tamanho do texto dentro do grid
-///tornar os itens tocaveis para abrir uma aba de descrição
+///TODO: tornar os itens tocaveis para abrir uma aba de descrição
 ///ESSE ARQUIVO DA MUITO GRANDE, VAMOS CRIAR UM NOVO SO PARA OS WIDGETS DELE
-///talvez colocar fome/sistema de comida
+///quando arrastado para cima, o item some aidna
 
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
@@ -10,6 +8,7 @@ import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_c
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_item_instance.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_manager.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_detail_page/tabs/sheet_tab_inventory_equipment/equipment_section.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
 
 class SheetTabInventory extends StatefulWidget {
@@ -24,11 +23,17 @@ class SheetTabInventory extends StatefulWidget {
 class _SheetTabInventoryState extends State<SheetTabInventory> {
   late InventoryManager inventoryManager;
   final GlobalKey _gridKey = GlobalKey();
-  final GlobalKey _trashKey = GlobalKey();
-  InventoryItemInstance? draggingItem;
-  Offset? dragOffset;
-  Offset? dragPosition;
   InventoryType selectedType = InventoryType.mediumBackpack;
+  bool isDragging = false;
+  late Map<EquipmentSlot, InventoryItemInstance?> equippedItems;
+
+  ///Mapa dos slots de equipamento
+  // Map<EquipmentSlot, InventoryItemInstance?> equippedItems = {
+  //   EquipmentSlot.head: null,
+  //   EquipmentSlot.chest: null,
+  //   EquipmentSlot.mainHand: null,
+  //   EquipmentSlot.offHand: null,
+  // };
 
   @override
   void initState() {
@@ -36,6 +41,8 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
     selectedType = InventoryType.values[widget.sheet.inventoryTypeIndex];
 
     inventoryManager = InventoryManager(selectedType);
+
+    equippedItems = widget.sheet.getEquippedItemsParsed;
 
     if (widget.sheet.inventoryGridItems.isNotEmpty) {
       inventoryManager.importItems(widget.sheet.inventoryGridItems);
@@ -155,6 +162,33 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
 
               const SizedBox(height: 32),
 
+              //Equipamento
+              EquipmentSection(
+                equippedItems: equippedItems,
+                onItemDropped: (slot, item) {
+                  print("Item dropado no slot");
+                  setState(() {
+                    equippedItems[slot] = item;
+                    inventoryManager.removeItem(item);
+
+                    widget.sheet.inventoryGridItems = inventoryManager
+                        .exportItems();
+
+                    widget.sheet.updateEquippedItemsFromParsed(equippedItems);
+                    widget.sheet.save();
+                  });
+                },
+                onItemRemoved: (slot) {
+                  setState(() {
+                    equippedItems[slot] = null;
+
+                    widget.sheet.updateEquippedItemsFromParsed(equippedItems);
+                    widget.sheet.save();
+                  });
+                },
+              ),
+
+              const SizedBox(height: 32),
               //
               // INVENTÁRIO
               //
@@ -207,7 +241,7 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
                     AnimatedPadding(
                       duration: const Duration(milliseconds: 200),
                       padding: EdgeInsets.only(
-                        bottom: draggingItem != null ? 80 : 0,
+                        bottom: isDragging ? 80 : 0,
                       ),
                       child: SizedBox(
                         height: 400,
@@ -216,10 +250,10 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
                     ),
 
                     AnimatedOpacity(
-                      opacity: draggingItem != null ? 1 : 0,
+                      opacity: isDragging ? 1 : 0,
                       duration: const Duration(milliseconds: 200),
                       child: IgnorePointer(
-                        ignoring: draggingItem == null,
+                        ignoring: isDragging == false,
                         child: Padding(
                           padding: const EdgeInsets.only(bottom: 10),
                           child: buildTrash(),
@@ -287,29 +321,45 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
                 final row = index ~/ cols;
                 final col = index % cols;
 
-                return GestureDetector(
-                  onTap: () {
-                    if (draggingItem != null) {
-                      final moved = inventoryManager.moveItem(
-                        draggingItem!,
-                        row,
-                        col,
-                      );
+                return DragTarget<InventoryItemInstance>(
+                  onAcceptWithDetails: (details) {
+                    final item = details.data;
 
-                      if (moved) {
-                        setState(() {
-                          draggingItem = null;
+                    bool moved;
+                    final alreadyInGrid = inventoryManager.contains(item);
+
+                    if (alreadyInGrid) {
+                      moved = inventoryManager.moveItem(item, row, col);
+                    } else {
+                      moved = inventoryManager.moveItem(item, row, col);
+                    }
+
+                    if (moved) {
+                      setState(() {
+                        equippedItems.updateAll((key, value) {
+                          return value == item ? null : value;
                         });
-                      }
+
+                        widget.sheet.inventoryGridItems = inventoryManager
+                            .exportItems();
+
+                        widget.sheet.save();
+                      });
                     }
                   },
-                  child: Container(
-                    margin: const EdgeInsets.all(2),
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.grey.shade700),
-                      color: Colors.black,
-                    ),
-                  ),
+                  builder: (context, candidateData, rejectedData) {
+                    return Container(
+                      margin: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: candidateData.isNotEmpty
+                              ? Colors.green
+                              : Colors.grey.shade700,
+                        ),
+                        color: Colors.black,
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -447,133 +497,42 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
         if (item != null && !renderedItems.contains(item)) {
           renderedItems.add(item);
 
-          bool isDragging = draggingItem == item;
-
           widgets.add(
             Positioned(
-              left: isDragging
-                  ? dragPosition!.dx - dragOffset!.dx
-                  : item.posY * cellSize,
-              top: isDragging
-                  ? dragPosition!.dy - dragOffset!.dy
-                  : item.posX * cellSize,
+              left: item.posY * cellSize,
+              top: item.posX * cellSize,
               width: item.width * cellSize,
               height: item.height * cellSize,
-              child: GestureDetector(
-                onPanStart: (details) {
-                  final box =
-                      _gridKey.currentContext!.findRenderObject() as RenderBox;
+              child: Draggable<InventoryItemInstance>(
+                data: item,
 
-                  final localPosition = box.globalToLocal(
-                    details.globalPosition,
-                  );
-
+                onDragStarted: () {
                   setState(() {
-                    draggingItem = item;
-                    dragPosition = localPosition;
-                    dragOffset = Offset(
-                      localPosition.dx - (item.posY * cellSize),
-                      localPosition.dy - (item.posX * cellSize),
-                    );
+                    isDragging = true;
                   });
                 },
-                onPanUpdate: (details) {
-                  final box =
-                      _gridKey.currentContext!.findRenderObject() as RenderBox;
 
-                  final localPosition = box.globalToLocal(
-                    details.globalPosition,
-                  );
-
+                onDragEnd: (_) {
                   setState(() {
-                    dragPosition = localPosition;
+                    isDragging = false;
                   });
                 },
-                onPanEnd: (_) {
-                  if (draggingItem == null || dragPosition == null) return;
 
-                  final gridBox =
-                      _gridKey.currentContext!.findRenderObject() as RenderBox;
-
-                  final trashBox =
-                      _trashKey.currentContext?.findRenderObject()
-                          as RenderBox?;
-
-                  // Converte posição local do grid para GLOBAL
-                  final globalDropPosition = gridBox.localToGlobal(
-                    dragPosition!,
-                  );
-
-                  bool droppedOnTrash = false;
-
-                  if (trashBox != null) {
-                    final trashPosition = trashBox.localToGlobal(Offset.zero);
-
-                    final trashSize = trashBox.size;
-
-                    droppedOnTrash =
-                        globalDropPosition.dx >= trashPosition.dx &&
-                        globalDropPosition.dx <=
-                            trashPosition.dx + trashSize.width &&
-                        globalDropPosition.dy >= trashPosition.dy &&
-                        globalDropPosition.dy <=
-                            trashPosition.dy + trashSize.height;
-                  }
-
-                  if (droppedOnTrash) {
-                    inventoryManager.removeItem(draggingItem!);
-                  } else {
-                    final newCol =
-                        ((dragPosition!.dx - dragOffset!.dx) / cellSize)
-                            .round();
-
-                    final newRow =
-                        ((dragPosition!.dy - dragOffset!.dy) / cellSize)
-                            .round();
-
-                    inventoryManager.moveItem(
-                      draggingItem!,
-                      newRow,
-                      newCol,
-                    );
-                  }
-
-                  setState(() {
-                    draggingItem = null;
-                    dragOffset = null;
-                    dragPosition = null;
-                  });
-
-                  widget.sheet.inventoryGridItems = inventoryManager
-                      .exportItems();
-                  widget.sheet.save();
-                },
-
-                child: IgnorePointer(
-                  ignoring: isDragging,
-                  child: Opacity(
-                    opacity: isDragging ? 0.85 : 1,
-                    child: Container(
-                      margin: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.blueGrey.shade700,
-                        border: Border.all(color: Colors.white70),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Center(
-                        child: Text(
-                          item.baseItem.name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 10,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ),
+                feedback: Material(
+                  color: Colors.transparent,
+                  child: SizedBox(
+                    width: item.width * cellSize,
+                    height: item.height * cellSize,
+                    child: _buildItemVisual(item),
                   ),
                 ),
+
+                childWhenDragging: Opacity(
+                  opacity: 0.3,
+                  child: _buildItemVisual(item),
+                ),
+
+                child: _buildItemVisual(item),
               ),
             ),
           );
@@ -582,6 +541,28 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
     }
 
     return widgets;
+  }
+
+  Widget _buildItemVisual(InventoryItemInstance item) {
+    return Container(
+      margin: const EdgeInsets.all(2),
+      decoration: BoxDecoration(
+        color: Colors.blueGrey.shade700,
+        border: Border.all(color: Colors.white70),
+        borderRadius: BorderRadius.circular(4),
+      ),
+      child: Center(
+        child: Text(
+          item.baseItem.name,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 10,
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
   }
 
   void _changeBackpack(InventoryType newType) {
@@ -624,19 +605,32 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
   }
 
   Widget buildTrash() {
-    return Container(
-      key: _trashKey,
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: Colors.red.shade700,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: const Icon(
-        Icons.delete,
-        color: Colors.white,
-        size: 40,
-      ),
+    return DragTarget<InventoryItemInstance>(
+      onAcceptWithDetails: (details) {
+        inventoryManager.removeItem(details.data);
+
+        setState(() {
+          widget.sheet.inventoryGridItems = inventoryManager.exportItems();
+          widget.sheet.save();
+        });
+      },
+      builder: (context, candidateData, rejectedData) {
+        return Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: candidateData.isNotEmpty
+                ? Colors.redAccent
+                : Colors.red.shade700,
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: const Icon(
+            Icons.delete,
+            color: Colors.white,
+            size: 40,
+          ),
+        );
+      },
     );
   }
 }
