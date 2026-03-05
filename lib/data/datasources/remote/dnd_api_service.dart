@@ -1,5 +1,7 @@
 import 'dart:convert';
+import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_background.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_race.dart';
 import 'package:http/http.dart' as http;
 
 class DndApiService {
@@ -63,6 +65,26 @@ class DndApiService {
       return jsonDecode(response.body);
     } else {
       throw Exception("Erro ao carregar níveis da classe");
+    }
+  }
+
+  ///RAÇAS
+
+  Future<List<DndRace>> fetchRace() async {
+    final response = await http.get(Uri.parse("$baseUrl/races"));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final List results = data["results"];
+
+      return results.map((item) {
+        return DndRace(
+          index: item["index"],
+          name: item["name"],
+        );
+      }).toList();
+    } else {
+      throw Exception("ERRO AO CARREGAR RAÇAS");
     }
   }
 }

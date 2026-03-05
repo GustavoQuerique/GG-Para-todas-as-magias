@@ -3,8 +3,13 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_background.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_race.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/background_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/class_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/races_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/build_dropdown_options.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/inline_editable_field.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
 
@@ -19,11 +24,20 @@ class SheetTabBase extends StatefulWidget {
 
 class _SheetTabBaseState extends State<SheetTabBase> {
   List<DndClass> availableClasses = [];
+  List<DndRace> availableRaces = [];
+  List<DndBackground> availableBackgrounds = [];
+
+  ///Tornar tudo uma so
   bool isLoadingClasses = true;
+  bool isLoadingRaces = true;
+  bool isLoadingBackground = true;
+
   int _deathSuccesses = 0;
   int _deathFailures = 0;
 
   final classRepository = ClassRepository();
+  final racesRepository = RacesRepository();
+  final backgroundRepository = BackgroundRepository();
 
   CharacterSheet get sheet => widget.sheet;
 
@@ -31,6 +45,8 @@ class _SheetTabBaseState extends State<SheetTabBase> {
   void initState() {
     super.initState();
     _loadClasses();
+    _loadRaces();
+    _loadBackground();
   }
 
   Future<void> _loadClasses() async {
@@ -39,6 +55,27 @@ class _SheetTabBaseState extends State<SheetTabBase> {
     setState(() {
       availableClasses = classes;
       isLoadingClasses = false;
+    });
+  }
+
+  Future<void> _loadRaces() async {
+    final races = await racesRepository.getRaces();
+
+    setState(() {
+      availableRaces = races;
+      isLoadingRaces = false;
+    });
+  }
+
+  Future<void> _loadBackground() async {
+    final background = await backgroundRepository.getBackground();
+
+    print("BACKGROUNDS: ${background.length}");
+    print(background.map((e) => e.name).toList());
+
+    setState(() {
+      availableBackgrounds = background;
+      isLoadingBackground = false;
     });
   }
 
@@ -100,20 +137,76 @@ class _SheetTabBaseState extends State<SheetTabBase> {
 
                 const Divider(),
 
-                _buildInfoRow(
-                  title: "Raça",
-                  value: sheet.raceIndex ?? "Não definida",
-                  onChanged: (val) {
-                    setState(() {
-                      sheet.raceIndex = val;
-                      sheet.save();
-                    });
+                ///Dropdown das raças
+                SheetDropdown(
+                  label: "Raças",
+                  currentValue: sheet.raceIndex,
+                  options: availableRaces
+                      .map(
+                        (dndRaces) => SheetDropdownOption(
+                          value: dndRaces.index,
+                          label: dndRaces.name,
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value == null) return;
+
+                    sheet.raceIndex = value;
+                    await sheet.save();
+
+                    setState(() {});
                   },
                 ),
 
                 const Divider(),
 
-                _buildClassDropdown(),
+                ///Dropdown das classes
+                SheetDropdown(
+                  label: "Classes",
+                  currentValue: sheet.classIndex,
+                  options: availableClasses
+                      .map(
+                        (dndClass) => SheetDropdownOption(
+                          value: dndClass.index,
+                          label: dndClass.name,
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value == null) return;
+
+                    sheet.classIndex = value;
+                    await sheet.save();
+
+                    setState(() {});
+                  },
+                ),
+
+                const Divider(),
+
+                ///Dropdown dos BackGround
+                ///
+                SheetDropdown(
+                  label: "Antecedentes",
+                  currentValue: sheet.backgroundIndex,
+                  options: availableBackgrounds
+                      .map(
+                        (dndBackground) => SheetDropdownOption(
+                          value: dndBackground.index,
+                          label: dndBackground.name,
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (value) async {
+                    if (value == null) return;
+
+                    sheet.backgroundIndex = value;
+                    await sheet.save();
+
+                    setState(() {});
+                  },
+                ),
 
                 const Divider(),
 
@@ -534,38 +627,6 @@ class _SheetTabBaseState extends State<SheetTabBase> {
           ),
         ],
       ),
-    );
-  }
-
-  ///Dropdown para escolher as classes disponiveis
-  Widget _buildClassDropdown() {
-    final sheet = widget.sheet;
-
-    if (isLoadingClasses) {
-      return const CircularProgressIndicator();
-    }
-
-    return DropdownButtonFormField<String>(
-      initialValue: sheet.classIndex,
-      decoration: const InputDecoration(
-        labelText: "Classe",
-        border: OutlineInputBorder(),
-      ),
-      items: availableClasses.map((dndClass) {
-        return DropdownMenuItem<String>(
-          value: dndClass.index,
-          child: Text(dndClass.name),
-        );
-      }).toList(),
-      onChanged: (value) async {
-        if (value == null) return;
-
-        sheet.classIndex = value;
-
-        await sheet.save();
-
-        setState(() {});
-      },
     );
   }
 }
