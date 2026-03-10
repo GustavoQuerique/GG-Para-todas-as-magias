@@ -28,13 +28,9 @@ Durante o desenvolvimento foram explorados conceitos como consumo de APIs, persi
 
 ## Demo
 ### Spell Search
+<img src="assets/gifs/spells.gif" width="450" height="760" alt="Spell list and search feature">
 
-<p align="center">
-  <img src="assets/gifs/spells.gif" width="450" height="760" alt="Spell list and search feature">
-</p>
 
 ### Character Sheet
+<img src="assets/gifs/character.gif" width="450" height="760" alt="Character sheet management">
 
-<p align="center">
-  <img src="assets/gifs/character.gif" width="450" height="760" alt="Character sheet management">
-</p>
