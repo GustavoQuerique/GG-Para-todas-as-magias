@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:hive/hive.dart';
 
-import '../../../memory/spell_model.dart';
+import '../../../models/spell_model.dart';
 
 class SpellCreator extends StatefulWidget {
   const SpellCreator({super.key});

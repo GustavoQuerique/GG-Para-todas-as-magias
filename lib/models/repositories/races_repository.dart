@@ -1,3 +1,4 @@
+import 'package:hive/hive.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_race.dart';
 
@@ -10,16 +11,38 @@ class RacesRepository {
 
   RacesRepository._internal();
 
-  List<DndRace>? _cachedRaces;
+  final DndApiService api = DndApiService();
 
   Future<List<DndRace>> getRaces() async {
-    if (_cachedRaces != null) {
-      return _cachedRaces!;
+    final box = await Hive.openBox<DndRace>("races_cache");
+
+    if (box.isNotEmpty) {
+      return box.values.toList();
     }
 
-    final api = DndApiService();
-    _cachedRaces = await api.fetchRace();
+    final races = await api.fetchRace();
 
-    return _cachedRaces!;
+    await box.addAll(races);
+
+    return races;
+  }
+
+  Future<void> refreshRaces() async {
+    final box = await Hive.openBox<DndRace>("races_cache");
+
+    try {
+      final races = await api.fetchRace();
+
+      await box.clear();
+      await box.addAll(races);
+    } catch (e) {
+      print('Falha ao atualizar o repositorio de raças');
+    }
+
+    // await box.clear();
+    //
+    // final races = await api.fetchRace();
+    //
+    // await box.addAll(races);
   }
 }

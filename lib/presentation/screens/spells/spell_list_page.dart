@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/memory/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/create_spells/spell_creator.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_viewer_page.dart';
@@ -23,7 +24,7 @@ class _SpellListPageState extends State<SpellListPage> {
   int? selectedLevel;
 
   final TextEditingController searchController = TextEditingController();
-  final DndApiService api = DndApiService();
+  final SpellRepository spellRepository = SpellRepository();
 
   List<SpellModel> spells = [];
   List<SpellModel> availableSpells = [];
@@ -44,41 +45,37 @@ class _SpellListPageState extends State<SpellListPage> {
     try {
       final customBox = Hive.box<SpellModel>('spells');
 
-      /// API ainda retorna List<Map<String, dynamic>>
-      final apiSpells = await api.fetchSpells(
-        className: selectedClass,
-        school: selectedSchool,
-        level: selectedLevel,
-      );
+      final cachedSpells = await spellRepository.getSpells();
 
-      await Future.delayed(const Duration(seconds: 2));
+      List<SpellModel> filtered = cachedSpells.where((spell) {
+        if (selectedLevel != null && spell.level != selectedLevel) {
+          return false;
+        }
 
-      print("API spells: ${apiSpells.length}");
+        if (selectedSchool != null &&
+            spell.school.toLowerCase() != selectedSchool) {
+          return false;
+        }
 
-      /// Converte API spells → SpellModel
-      final convertedApiSpells = apiSpells.map<SpellModel>((spell) {
-        return SpellModel(
-          index: spell['index'],
-          name: spell['name'],
-          school: spell['school']?['name'] ?? '',
-          level: spell['level'] ?? 0,
-          description: const [],
-          concentration: false,
-        );
+        // /// Classe depende se você salvou classes na SpellModel
+        // if (selectedClass != null && !spell.classes.contains(selectedClass)) {
+        //   return false;
+        // }
+
+        return true;
       }).toList();
 
       if (!mounted) return;
+
       setState(() {
         spells = [
           ...customBox.values,
-          ...convertedApiSpells,
+          ...filtered,
         ];
 
-        availableSpells = spells;
+        availableSpells = List.from(spells);
         isLoading = false;
       });
-
-      print("Total spells: ${spells.length}");
     } catch (e) {
       print("Erro ao carregar magias: $e");
 

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/memory/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class FavoritesPage extends StatefulWidget {

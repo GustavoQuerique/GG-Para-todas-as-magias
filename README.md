@@ -1,16 +1,33 @@
-# guia_de_garlou_para_todas_as_magias
+# Grimório Arcano
+![Flutter](https://img.shields.io/badge/Flutter-Mobile-blue)
+![Dart](https://img.shields.io/badge/Dart-Language-blue)
+![Hive](https://img.shields.io/badge/Hive-LocalDB-yellow)
 
-Livro de magias para D&D 5E feito pelo meu personagem
+Aplicativo desenvolvido em Flutter que funciona como um grimório digital para Dungeons & Dragons 5ª edição.
 
-## Getting Started
+O app permite consultar magias oficiais do sistema, visualizar detalhes, marcar favoritas e criar magias personalizadas.
+Os dados são obtidos através da API pública de D&D 5e e armazenados localmente para melhorar o desempenho e permitir uso offline.
 
-This project is a starting point for a Flutter application.
+## Features
+- Consulta de magias do sistema D&D 5e
+- Busca por nome
+- Filtros por nível e escola de magia
+- Visualização detalhada das magias
+- Sistema de magias favoritas
+- Criação de magias personalizadas
+- Sistema de fichas de personagem
+- Inventário de itens
+- Funcionamento offline após o primeiro carregamento
 
-A few resources to get you started if this is your first Flutter project:
+API utilizada: [D&D 5e API](https://www.dnd5eapi.co/)
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+## Sobre o desenvolvimento
+Este projeto foi desenvolvido como forma de estudo em desenvolvimento mobile com Flutter.
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Durante o desenvolvimento foram explorados conceitos como consumo de APIs, persistência local de dados e organização de interface para aplicações mobile.
+
+## Demo
+<p align="center">
+  <img src="assets/gifs/spells.gif" width="300" alt="Spell list and search feature">
+  <img src="assets/gifs/character.gif" width="300" alt="Character sheet management">
+</p>

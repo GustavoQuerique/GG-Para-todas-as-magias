@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/local/favorites_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/memory/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/action_button.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/circular_action_menu.dart';
 import 'package:hive/hive.dart';

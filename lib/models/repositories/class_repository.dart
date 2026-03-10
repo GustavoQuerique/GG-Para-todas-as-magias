@@ -1,28 +1,42 @@
+import 'package:hive/hive.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
 
 class ClassRepository {
-  // Instância única
   static final ClassRepository _instance = ClassRepository._internal();
 
-  // Construtor factory
   factory ClassRepository() {
     return _instance;
   }
 
-  // Construtor privado
   ClassRepository._internal();
 
-  List<DndClass>? _cachedClasses;
+  final DndApiService api = DndApiService();
 
   Future<List<DndClass>> getClasses() async {
-    if (_cachedClasses != null) {
-      return _cachedClasses!;
+    final box = await Hive.openBox<DndClass>("classes_cache");
+
+    if (box.isNotEmpty) {
+      return box.values.toList();
     }
 
-    final api = DndApiService();
-    _cachedClasses = await api.fetchClasses();
+    final classes = await api.fetchClasses();
 
-    return _cachedClasses!;
+    await box.addAll(classes);
+
+    return classes;
+  }
+
+  Future<void> refreshClasses() async {
+    final box = await Hive.openBox<DndClass>("classes_cache");
+
+    try {
+      final classes = await api.fetchClasses();
+
+      await box.clear();
+      await box.addAll(classes);
+    } catch (e) {
+      print("Falha ao atualizar classes, mantendo cache");
+    }
   }
 }

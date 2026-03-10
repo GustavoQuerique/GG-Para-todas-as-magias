@@ -1,6 +1,6 @@
 import 'package:hive/hive.dart';
 
-import '../../../memory/spell_model.dart';
+import '../../../models/spell_model.dart';
 
 class FavoritesService {
   final Box<SpellModel> box = Hive.box<SpellModel>('favorites');
