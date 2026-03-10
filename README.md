@@ -27,7 +27,14 @@ Este projeto foi desenvolvido como forma de estudo em desenvolvimento mobile com
 Durante o desenvolvimento foram explorados conceitos como consumo de APIs, persistência local de dados e organização de interface para aplicações mobile.
 
 ## Demo
+### Spell Search
+
 <p align="center">
-  <img src="assets/gifs/spells.gif" width="420" height="760" alt="Spell list and search feature">
-  <img src="assets/gifs/character.gif" width="420" height="760" alt="Character sheet management">
+  <img src="assets/gifs/spells.gif" width="450" alt="Spell list and search feature">
+</p>
+
+### Character Sheet
+
+<p align="center">
+  <img src="assets/gifs/character.gif" width="450" alt="Character sheet management">
 </p>
