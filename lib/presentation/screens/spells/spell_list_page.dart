@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/create_spells/spell_creator.dart';
@@ -56,11 +55,6 @@ class _SpellListPageState extends State<SpellListPage> {
             spell.school.toLowerCase() != selectedSchool) {
           return false;
         }
-
-        // /// Classe depende se você salvou classes na SpellModel
-        // if (selectedClass != null && !spell.classes.contains(selectedClass)) {
-        //   return false;
-        // }
 
         return true;
       }).toList();

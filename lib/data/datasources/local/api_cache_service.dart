@@ -16,9 +16,20 @@ class ApiCacheService {
   Future<void> initializeCache() async {
     try {
       await classRepository.refreshClasses();
+    } catch (e) {
+      print("Erro ao atualizar classes: $e");
+    }
+
+    try {
       await raceRepository.refreshRaces();
     } catch (e) {
-      print("API indisponivel, usando cached data local");
+      print("Erro ao atualizar raças: $e");
+    }
+
+    try {
+      await spellRepository.refreshSpells();
+    } catch (e) {
+      print("Erro ao atualizar magias: $e");
     }
   }
 }

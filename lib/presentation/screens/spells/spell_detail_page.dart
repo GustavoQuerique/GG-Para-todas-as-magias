@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/local/favorites_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/action_button.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/circular_action_menu.dart';
@@ -20,9 +20,9 @@ class SpellDetailPage extends StatefulWidget {
 
 class _SpellDetailPageState extends State<SpellDetailPage> {
   final favoritesService = FavoritesService();
-  bool isFavorite = false;
-  final DndApiService api = DndApiService();
+  final SpellRepository spellRepository = SpellRepository();
 
+  bool isFavorite = false;
   SpellModel? spell;
   bool isLoading = true;
 
@@ -40,8 +40,7 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
         final box = Hive.box<SpellModel>('spells');
         loadedSpell = box.get(widget.spellIndex);
       } else {
-        final data = await api.fetchSpellsDetail(widget.spellIndex);
-        loadedSpell = SpellModel.fromJson(data);
+        loadedSpell = await spellRepository.getSpellByIndex(widget.spellIndex);
       }
 
       if (!mounted) return;
@@ -58,6 +57,7 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
       debugPrintStack(stackTrace: stack);
 
       if (!mounted) return;
+
       setState(() {
         isLoading = false;
       });
@@ -95,7 +95,6 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
     Navigator.pop(context, true);
   }
 
-  @override
   Widget _info(String title, {String? value = ''}) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -117,7 +116,7 @@ class _SpellDetailPageState extends State<SpellDetailPage> {
               final index = spell!.index;
 
               if (isFavorite) {
-                favoritesService.removeFavorite(spell!.index);
+                favoritesService.removeFavorite(index);
               } else {
                 favoritesService.addFavorite(
                   SpellModel(
