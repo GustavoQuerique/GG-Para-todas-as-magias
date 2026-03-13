@@ -57,6 +57,11 @@ class _SpellListPageState extends State<SpellListPage> {
           return false;
         }
 
+        // /// Classe depende se você salvou classes na SpellModel
+        // if (selectedClass != null && !spell.classes.contains(selectedClass)) {
+        //   return false;
+        // }
+
         return true;
       }).toList();
 
