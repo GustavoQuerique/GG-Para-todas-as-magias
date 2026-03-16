@@ -27,7 +27,7 @@ void main() async {
 
   await Hive.openBox<SpellModel>('favorites');
   await Hive.openBox<SpellModel>('spells');
-  await Hive.openBox<SpellModel>('spells_cache');
+  await Hive.openBox<SpellModel>('spells_cached');
   await Hive.openBox<CharacterSheet>('sheets');
   await Hive.openBox<DndClass>('classes');
   await Hive.openBox<DndRace>('races');

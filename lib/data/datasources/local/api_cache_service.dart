@@ -1,6 +1,7 @@
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/class_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/races_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
 import 'package:hive/hive.dart';
 
 class ApiCacheService {
@@ -15,7 +16,7 @@ class ApiCacheService {
   });
 
   Future<void> initializeCache() async {
-    final box = Hive.box('spells_cached');
+    final box = await Hive.openBox<SpellModel>('spells_cached');
 
     try {
       await classRepository.refreshClasses();

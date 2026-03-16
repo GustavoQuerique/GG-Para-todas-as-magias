@@ -4,13 +4,13 @@ import 'package:hive/hive.dart';
 
 class SpellRepository {
   final api = DndApiService();
+  static const String _boxName = 'spells_cached';
 
+  // Centraliza a abertura da box para evitar erro de "Box not open"
   Future<Box<SpellModel>> _getBox() async {
-    if (Hive.isBoxOpen('spells_cache')) {
-      return Hive.box<SpellModel>('spells_cache');
-    }
-
-    return await Hive.openBox<SpellModel>('spells_cache');
+    return Hive.isBoxOpen(_boxName)
+        ? Hive.box<SpellModel>(_boxName)
+        : await Hive.openBox<SpellModel>(_boxName);
   }
 
   Future<List<SpellModel>> getSpells() async {
@@ -19,55 +19,68 @@ class SpellRepository {
   }
 
   Future<void> refreshSpells() async {
-    final box = Hive.box<SpellModel>('spells_cache');
+    final box = await _getBox();
 
     print("Baixando lista de magias...");
-
     final spellIndexes = await api.fetchSpells();
 
     const batchSize = 20;
-
     List<SpellModel> spells = [];
 
     for (int i = 0; i < spellIndexes.length; i += batchSize) {
       final batch = spellIndexes.skip(i).take(batchSize);
 
-      final futures = batch.map((spell) {
-        return api.fetchSpellsDetail(spell['index']);
-      });
-
-      final spellsJson = await Future.wait(
-        futures.map((f) => f.catchError((_) => null)),
+      final futures = batch.map(
+        (spell) => api.fetchSpellsDetail(spell['index']),
       );
 
-      spells.addAll(
-        spellsJson
-            .where((json) => json != null)
-            .map((json) => SpellModel.fromJson(json)),
+      // Aguarda o lote de requisições
+      final results = await Future.wait(
+        futures.map(
+          (f) => f.catchError((e) {
+            print("Erro ao baixar magia: $e");
+            return null;
+          }),
+        ),
       );
+
+      for (var json in results) {
+        if (json != null) {
+          try {
+            spells.add(SpellModel.fromJson(json));
+          } catch (e) {
+            print("Erro ao converter JSON para SpellModel: $e");
+          }
+        }
+      }
 
       print("Downloaded ${spells.length}/${spellIndexes.length}");
     }
 
+    // Otimização: Limpar e inserir tudo de uma vez (putAll)
     await box.clear();
-    for (final spell in spells) {
-      await box.put(spell.index, spell);
-    }
+    final Map<String, SpellModel> spellMap = {
+      for (var spell in spells) spell.index: spell,
+    };
+    await box.putAll(spellMap);
 
-    print("Cache de magias atualizado!");
+    print("Cache de magias atualizado com ${spells.length} magias!");
   }
 
   Future<SpellModel?> getSpellByIndex(String index) async {
     final box = await _getBox();
-
     final cached = box.get(index);
+
     if (cached != null) return cached;
 
-    final data = await api.fetchSpellsDetail(index);
-    final spell = SpellModel.fromJson(data);
-
-    await box.put(index, spell);
-
-    return spell;
+    try {
+      final data = await api.fetchSpellsDetail(index);
+      final spell = SpellModel.fromJson(data);
+      await box.put(index, spell);
+      return spell;
+    } catch (e) {
+      print("Erro ao buscar detalhe da magia $index: $e");
+      return null;
+    }
   }
 }

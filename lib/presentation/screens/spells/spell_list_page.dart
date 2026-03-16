@@ -33,50 +33,64 @@ class _SpellListPageState extends State<SpellListPage> {
   @override
   void initState() {
     super.initState();
-    spellRepository.refreshSpells();
-    reloadSpells();
+    _initializeData(); // Criamos uma função mestre para gerenciar o fluxo
+  }
+
+  Future<void> _initializeData() async {
+    // Primeiro, carrega o que já existe no cache (para não deixar o usuário esperando)
+    await reloadSpells();
+
+    // Se a lista estiver vazia, ou se quiser atualizar sempre ao abrir:
+    if (availableSpells.isEmpty) {
+      setState(() => isLoading = true);
+    }
+
+    try {
+      // Tenta atualizar os dados da API em segundo plano
+      await spellRepository.refreshSpells();
+
+      // Quando terminar o download, recarrega a lista para mostrar as novidades
+      await reloadSpells();
+    } catch (e) {
+      print("Erro ao sincronizar com API: $e");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   Future<void> reloadSpells() async {
-    setState(() {
-      isLoading = true;
-    });
-
     try {
-      final customBox = Hive.box<SpellModel>('spells');
+      final customBox = await Hive.openBox<SpellModel>('spells_cached');
 
       final cachedSpells = await spellRepository.getSpells();
 
       List<SpellModel> filtered = cachedSpells.where((spell) {
-        if (selectedLevel != null && spell.level != selectedLevel) {
-          return false;
-        }
+        if (selectedLevel != null && spell.level != selectedLevel) return false;
 
         if (selectedSchool != null &&
-            spell.school.toLowerCase() != selectedSchool) {
+            spell.school.toLowerCase() != selectedSchool?.toLowerCase()) {
           return false;
         }
-
         return true;
       }).toList();
 
       if (!mounted) return;
 
       setState(() {
+        // Combinamos as magias criadas manualmente ('spells') com as da API ('filtered')
         spells = [
           ...customBox.values,
           ...filtered,
         ];
+
+        spells.sort((a, b) => a.name.compareTo(b.name));
 
         availableSpells = List.from(spells);
         isLoading = false;
       });
     } catch (e) {
       print("Erro ao carregar magias: $e");
-
-      setState(() {
-        isLoading = false;
-      });
+      if (mounted) setState(() => isLoading = false);
     }
   }
 
