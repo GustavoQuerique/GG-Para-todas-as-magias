@@ -1,6 +1,7 @@
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/class_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/races_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
+import 'package:hive/hive.dart';
 
 class ApiCacheService {
   final ClassRepository classRepository;
@@ -14,6 +15,8 @@ class ApiCacheService {
   });
 
   Future<void> initializeCache() async {
+    final box = Hive.box('spells_cached');
+
     try {
       await classRepository.refreshClasses();
     } catch (e) {
@@ -27,7 +30,9 @@ class ApiCacheService {
     }
 
     try {
-      await spellRepository.refreshSpells();
+      if (box.isEmpty) {
+        await spellRepository.refreshSpells();
+      }
     } catch (e) {
       print("Erro ao atualizar magias: $e");
     }

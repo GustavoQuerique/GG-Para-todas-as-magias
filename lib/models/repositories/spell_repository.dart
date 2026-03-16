@@ -5,8 +5,16 @@ import 'package:hive/hive.dart';
 class SpellRepository {
   final api = DndApiService();
 
-  List<SpellModel> getSpells() {
-    final box = Hive.box<SpellModel>('spells_cache');
+  Future<Box<SpellModel>> _getBox() async {
+    if (Hive.isBoxOpen('spells_cache')) {
+      return Hive.box<SpellModel>('spells_cache');
+    }
+
+    return await Hive.openBox<SpellModel>('spells_cache');
+  }
+
+  Future<List<SpellModel>> getSpells() async {
+    final box = await _getBox();
     return box.values.toList();
   }
 
@@ -28,40 +36,38 @@ class SpellRepository {
         return api.fetchSpellsDetail(spell['index']);
       });
 
-      final spellsJson = await Future.wait(futures);
+      final spellsJson = await Future.wait(
+        futures.map((f) => f.catchError((_) => null)),
+      );
 
       spells.addAll(
-        spellsJson.map((json) => SpellModel.fromJson(json)),
+        spellsJson
+            .where((json) => json != null)
+            .map((json) => SpellModel.fromJson(json)),
       );
 
       print("Downloaded ${spells.length}/${spellIndexes.length}");
     }
 
     await box.clear();
-    await box.addAll(spells);
+    for (final spell in spells) {
+      await box.put(spell.index, spell);
+    }
 
     print("Cache de magias atualizado!");
   }
 
   Future<SpellModel?> getSpellByIndex(String index) async {
-    final box = Hive.box<SpellModel>('spells_cache');
+    final box = await _getBox();
 
-    final cached = box.values.where((s) => s.index == index).firstOrNull;
+    final cached = box.get(index);
+    if (cached != null) return cached;
 
-    if (cached != null) {
-      return cached;
-    }
+    final data = await api.fetchSpellsDetail(index);
+    final spell = SpellModel.fromJson(data);
 
-    try {
-      final data = await api.fetchSpellsDetail(index);
-      final spell = SpellModel.fromJson(data);
+    await box.put(index, spell);
 
-      await box.add(spell);
-
-      return spell;
-    } catch (e) {
-      print("Erro ao buscar magias: $e");
-      return null;
-    }
+    return spell;
   }
 }

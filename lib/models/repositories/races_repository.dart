@@ -14,7 +14,7 @@ class RacesRepository {
   final DndApiService api = DndApiService();
 
   Future<List<DndRace>> getRaces() async {
-    final box = await Hive.openBox<DndRace>("races_cache");
+    final box = await Hive.openBox<DndRace>("races");
 
     if (box.isNotEmpty) {
       return box.values.toList();
@@ -28,7 +28,7 @@ class RacesRepository {
   }
 
   Future<void> refreshRaces() async {
-    final box = await Hive.openBox<DndRace>("races_cache");
+    final box = await Hive.openBox<DndRace>("races");
 
     try {
       final races = await api.fetchRace();

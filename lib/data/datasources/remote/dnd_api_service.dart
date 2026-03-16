@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_background.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_race.dart';
 import 'package:http/http.dart' as http;

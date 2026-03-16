@@ -33,6 +33,7 @@ class _SpellListPageState extends State<SpellListPage> {
   @override
   void initState() {
     super.initState();
+    spellRepository.refreshSpells();
     reloadSpells();
   }
 

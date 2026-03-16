@@ -38,9 +38,9 @@ void main() async {
     raceRepository: RacesRepository(),
   );
 
-  await apiCacheService.initializeCache();
-
   runApp(const MyApp());
+
+  apiCacheService.initializeCache();
 }
 
 class MyApp extends StatelessWidget {

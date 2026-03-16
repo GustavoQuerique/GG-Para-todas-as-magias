@@ -14,7 +14,7 @@ class ClassRepository {
   final DndApiService api = DndApiService();
 
   Future<List<DndClass>> getClasses() async {
-    final box = await Hive.openBox<DndClass>("classes_cache");
+    final box = await Hive.openBox<DndClass>("classes");
 
     if (box.isNotEmpty) {
       return box.values.toList();
@@ -28,7 +28,7 @@ class ClassRepository {
   }
 
   Future<void> refreshClasses() async {
-    final box = await Hive.openBox<DndClass>("classes_cache");
+    final box = await Hive.openBox<DndClass>("classes");
 
     try {
       final classes = await api.fetchClasses();
