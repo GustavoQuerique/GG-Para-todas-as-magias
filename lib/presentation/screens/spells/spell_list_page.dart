@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/spell_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/create_spells/spell_creator.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_viewer_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_detail_page.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/action_button.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/circular_action_menu.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/spell_filter.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/buttons/action_button.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/buttons/circular_action_menu.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/spell_filter.dart';
+
 import 'package:hive/hive.dart';
 
 class SpellListPage extends StatefulWidget {

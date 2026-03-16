@@ -1,7 +1,7 @@
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_container.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_grid.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_item_instance.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_movement.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_container.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_grid.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_item_instance.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_movement.dart';
 
 class InventoryManager {
   late InventoryGrid grid;

@@ -1,7 +1,7 @@
 ///mudar a aparencia da tela, passando o valor dos atributos para baixo
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
-import '../../../../../models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/medieval_card.dart';
 
 class SheetTabAttributes extends StatefulWidget {
   final CharacterSheet sheet;

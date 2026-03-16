@@ -1,9 +1,5 @@
-//Eu gostei do design desse widget, mas não vou usar dentro da pagina inicial
-// talvez eu possa usar em outros lugares no futuro
-
 import 'package:flutter/material.dart';
-
-import '../presentation/screens/favorites/favorites_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
 
 class BottomPanelWidget extends StatefulWidget {
   final VoidCallback? onFavoritesTap;

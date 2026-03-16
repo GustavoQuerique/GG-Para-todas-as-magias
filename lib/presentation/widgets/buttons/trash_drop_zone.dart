@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_item.dart';
 
 class TrashDropZone extends StatelessWidget {
   final Function(InventoryItem) onItemDropped;

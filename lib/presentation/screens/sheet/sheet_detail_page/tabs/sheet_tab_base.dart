@@ -1,17 +1,16 @@
 ///TODO: adicionar ataques e magias rapidas e as personalidades do personagem
 
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_background.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_race.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/background_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/class_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/races_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/buttons/build_dropdown_options.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/inline_editable_field.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/background_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/class_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/races_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_background.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_class.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_race.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/buttons/build_dropdown_options.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/inline_editable_field.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/medieval_card.dart';
 
 class SheetTabBase extends StatefulWidget {
   final CharacterSheet sheet;

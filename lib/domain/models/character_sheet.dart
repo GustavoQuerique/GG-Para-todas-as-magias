@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_container.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_item_instance.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_container.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_item_instance.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_item.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_detail_page/tabs/sheet_tab_inventory_equipment/equipment_section.dart';
 import 'package:hive/hive.dart';
 

@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/core/theme/app_theme.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/local/api_cache_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_race.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/class_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/races_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/class_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/races_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/spell_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_class.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_race.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
+
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_list_page.dart';
 import 'package:hive_flutter/adapters.dart';
-
-import 'models/character_sheet.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

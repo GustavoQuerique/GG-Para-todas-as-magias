@@ -1,5 +1,5 @@
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
 import 'package:hive/hive.dart';
 
 class SpellRepository {

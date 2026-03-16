@@ -3,11 +3,11 @@
 /// adicionar slotes de maigas disponiveis baseado no lv
 
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_slot_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/spell_slot_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_detail_page.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/medieval_card.dart';
 
 class SheetTabSpells extends StatefulWidget {
   final CharacterSheet sheet;

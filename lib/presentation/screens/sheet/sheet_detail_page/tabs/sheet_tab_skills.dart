@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
 
 class SheetTabSkills extends StatefulWidget {
   final CharacterSheet sheet;

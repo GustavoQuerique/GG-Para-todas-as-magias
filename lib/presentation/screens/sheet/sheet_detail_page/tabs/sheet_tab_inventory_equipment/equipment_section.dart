@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_item_instance.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_item_instance.dart';
 
 enum EquipmentSlot {
   head,

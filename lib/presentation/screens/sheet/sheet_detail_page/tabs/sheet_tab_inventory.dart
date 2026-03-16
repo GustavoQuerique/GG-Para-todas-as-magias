@@ -3,13 +3,13 @@
 ///quando arrastado para cima, o item some aidna
 
 import 'package:flutter/material.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/character_sheet.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_container.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_item_instance.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_controller/inventory_manager.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/inventory/inventory_item.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_container.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_item_instance.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_controller/inventory_manager.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_item.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_detail_page/tabs/sheet_tab_inventory_equipment/equipment_section.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/widgets/medieval_card.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/medieval_card.dart';
 
 class SheetTabInventory extends StatefulWidget {
   final CharacterSheet sheet;
@@ -26,14 +26,6 @@ class _SheetTabInventoryState extends State<SheetTabInventory> {
   InventoryType selectedType = InventoryType.mediumBackpack;
   bool isDragging = false;
   late Map<EquipmentSlot, InventoryItemInstance?> equippedItems;
-
-  ///Mapa dos slots de equipamento
-  // Map<EquipmentSlot, InventoryItemInstance?> equippedItems = {
-  //   EquipmentSlot.head: null,
-  //   EquipmentSlot.chest: null,
-  //   EquipmentSlot.mainHand: null,
-  //   EquipmentSlot.offHand: null,
-  // };
 
   @override
   void initState() {

@@ -1,6 +1,6 @@
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_class.dart';
 import 'package:hive/hive.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/remote/dnd_api_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/dnd_class.dart';
 
 class ClassRepository {
   static final ClassRepository _instance = ClassRepository._internal();

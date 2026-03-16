@@ -1,7 +1,7 @@
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/class_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/races_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/repositories/spell_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/models/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/class_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/races_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/spell_repository.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
 import 'package:hive/hive.dart';
 
 class ApiCacheService {

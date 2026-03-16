@@ -3,8 +3,8 @@
 ///mas primeiro preciso terminar os modelos das tabs.
 
 import 'package:flutter/material.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
 import 'package:hive_flutter/hive_flutter.dart';
-import '../../../models/character_sheet.dart';
 import 'sheet_detail_page/sheet_detail_page.dart';
 
 class SheetViewerPage extends StatelessWidget {
