@@ -35,6 +35,8 @@ dependencies:
   hive:
   hive_flutter:
   fab_circular_menu_plus: 
+  font_awesome_flutter: ^11.0.0
+  lottie: ^3.3.2
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -56,8 +58,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
+  assets:
+   - assets/lottie/
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

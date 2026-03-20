@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/spell_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/create_spells/spell_creator.dart';
@@ -22,6 +23,8 @@ class _SpellListPageState extends State<SpellListPage> {
   String? selectedClass;
   String? selectedSchool;
   int? selectedLevel;
+  bool showOnlyCustom = false;
+  bool isSearching = false;
 
   final TextEditingController searchController = TextEditingController();
   final SpellRepository spellRepository = SpellRepository();
@@ -29,47 +32,33 @@ class _SpellListPageState extends State<SpellListPage> {
   List<SpellModel> spells = [];
   List<SpellModel> availableSpells = [];
 
-  bool isLoading = true;
+  bool isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _initializeData(); // Criamos uma função mestre para gerenciar o fluxo
-  }
-
-  Future<void> _initializeData() async {
-    // Primeiro, carrega o que já existe no cache (para não deixar o usuário esperando)
-    await reloadSpells();
-
-    // Se a lista estiver vazia, ou se quiser atualizar sempre ao abrir:
-    if (availableSpells.isEmpty) {
-      setState(() => isLoading = true);
-    }
-
-    try {
-      // Tenta atualizar os dados da API em segundo plano
-      await spellRepository.refreshSpells();
-
-      // Quando terminar o download, recarrega a lista para mostrar as novidades
-      await reloadSpells();
-    } catch (e) {
-      print("Erro ao sincronizar com API: $e");
-    } finally {
-      if (mounted) setState(() => isLoading = false);
-    }
+    reloadSpells();
   }
 
   Future<void> reloadSpells() async {
     try {
-      final customBox = await Hive.openBox<SpellModel>('spells_cached');
-
+      final customBox = await Hive.openBox<SpellModel>('spells');
       final cachedSpells = await spellRepository.getSpells();
 
-      List<SpellModel> filtered = cachedSpells.where((spell) {
+      List<SpellModel> allSpells = [
+        ...customBox.values,
+        ...cachedSpells,
+      ];
+
+      List<SpellModel> filtered = allSpells.where((spell) {
         if (selectedLevel != null && spell.level != selectedLevel) return false;
 
         if (selectedSchool != null &&
             spell.school.toLowerCase() != selectedSchool?.toLowerCase()) {
+          return false;
+        }
+
+        if (showOnlyCustom && !spell.index.startsWith('custom_')) {
           return false;
         }
         return true;
@@ -78,20 +67,13 @@ class _SpellListPageState extends State<SpellListPage> {
       if (!mounted) return;
 
       setState(() {
-        // Combinamos as magias criadas manualmente ('spells') com as da API ('filtered')
-        spells = [
-          ...customBox.values,
-          ...filtered,
-        ];
-
+        spells = filtered;
         spells.sort((a, b) => a.name.compareTo(b.name));
-
         availableSpells = List.from(spells);
         isLoading = false;
       });
     } catch (e) {
       print("Erro ao carregar magias: $e");
-      if (mounted) setState(() => isLoading = false);
     }
   }
 
@@ -99,8 +81,23 @@ class _SpellListPageState extends State<SpellListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Grimório Arcano'),
+        title: isSearching ? _buildSearchBar() : const Text('Grimório Arcano'),
         actions: [
+          IconButton(
+            icon: Icon(isSearching ? Icons.close : Icons.search),
+            onPressed: () {
+              setState(
+                () {
+                  isSearching = !isSearching;
+                  if (!isSearching) {
+                    searchController.clear();
+                    searchSpell('');
+                  }
+                },
+              );
+            },
+          ),
+
           IconButton(
             icon: const Icon(Icons.filter_list_alt),
             onPressed: () {
@@ -111,11 +108,13 @@ class _SpellListPageState extends State<SpellListPage> {
                   initialClass: selectedClass,
                   initialSchool: selectedSchool,
                   initialLevel: selectedLevel,
-                  onApply: (className, school, level) {
+                  initialOnlyCustom: showOnlyCustom,
+                  onApply: (className, school, level, isCustom) {
                     setState(() {
                       selectedClass = className;
                       selectedSchool = school;
                       selectedLevel = level;
+                      showOnlyCustom = isCustom;
                     });
                     reloadSpells();
                   },
@@ -128,7 +127,6 @@ class _SpellListPageState extends State<SpellListPage> {
       ),
       body: Column(
         children: [
-          _buildSearchBar(),
           Expanded(
             child: Stack(
               children: [
@@ -216,13 +214,16 @@ class _SpellListPageState extends State<SpellListPage> {
         return Card(
           child: ListTile(
             title: Text(spell.name),
-            subtitle: Text('Level: ${spell.level}'),
-            trailing: Icon(
-              spell.index.startsWith('custom_')
-                  ? Icons.bookmark
-                  : Icons.menu_book_outlined,
-            ),
+            subtitle: Text('Level: ${spell.level} • ${spell.school}'),
+            trailing: spell.index.startsWith('custom_')
+                ? const Icon(
+                    Icons.bookmark,
+                    color: Colors.purpleAccent,
+                  )
+                : _getSchoolIcon(spell.school, Colors.grey[400]!),
             onTap: () async {
+              FocusScope.of(context).unfocus();
+
               final deleted = await Navigator.push<bool>(
                 context,
                 MaterialPageRoute(
@@ -275,5 +276,36 @@ class _SpellListPageState extends State<SpellListPage> {
     setState(() {
       spells = suggestions;
     });
+  }
+
+  Widget _getSchoolIcon(String school, Color color) {
+    switch (school.toLowerCase()) {
+      case 'evocation':
+        return Icon(Icons.local_fire_department, color: color);
+      case 'conjuration':
+        return Icon(Icons.auto_fix_high, color: color);
+      case 'abjuration':
+        return Icon(Icons.shield, color: color);
+      case 'divination':
+        return Icon(Icons.remove_red_eye, color: color);
+      case 'enchantment':
+        return Icon(Icons.favorite, color: color);
+      case 'illusion':
+        return Icon(Icons.auto_awesome_motion, color: color);
+      case 'necromancy':
+        return FaIcon(
+          FontAwesomeIcons.skull,
+          color: color,
+          size: 20,
+        ); // FontAwesome
+      case 'transmutation':
+        return FaIcon(
+          FontAwesomeIcons.atom,
+          color: color,
+          size: 20,
+        ); // FontAwesome
+      default:
+        return Icon(Icons.menu_book_outlined, color: color);
+    }
   }
 }

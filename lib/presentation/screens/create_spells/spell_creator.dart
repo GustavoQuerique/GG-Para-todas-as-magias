@@ -92,7 +92,6 @@ class _SpellCreatorState extends State<SpellCreator> {
               ),
               const SizedBox(height: 16),
 
-              //BOTÃO DA ESCOLA TODO:MELHORAR A POSIÇÃO DO LABELTEXT
               DropdownButtonFormField<String>(
                 initialValue: _selectedSchool,
                 decoration: const InputDecoration(labelText: 'Escola da Magia'),
@@ -209,8 +208,6 @@ class _SpellCreatorState extends State<SpellCreator> {
                 icon: Icon(Icons.save_alt),
                 label: const Text('Salvar Magia'),
                 onPressed: _savedSpell,
-
-                //ADICIONAR ALCANÇE DURAÇÃO E CONCETRAÇÃO
               ),
             ],
           ),

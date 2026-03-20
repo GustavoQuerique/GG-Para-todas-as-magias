@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_detail_page.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 
 class FavoritesPage extends StatefulWidget {
@@ -40,6 +41,15 @@ class _FavoritesPageState extends State<FavoritesPage> {
                   subtitle: Text(
                     '${spell.school} | Nível ${spell.level}',
                   ),
+                  onTap: () async {
+                    await Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) =>
+                            SpellDetailPage(spellIndex: spell.index),
+                      ),
+                    );
+                  },
                   trailing: IconButton(
                     icon: const Icon(Icons.delete_outline),
                     onPressed: () {

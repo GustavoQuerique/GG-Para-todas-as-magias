@@ -4,13 +4,15 @@ class SpellFilter extends StatefulWidget {
   final String? initialClass;
   final String? initialSchool;
   final int? initialLevel;
-  final Function(String?, String?, int?) onApply;
+  final bool initialOnlyCustom;
+  final Function(String?, String?, int?, bool) onApply;
 
   const SpellFilter({
     super.key,
     this.initialClass,
     this.initialSchool,
     this.initialLevel,
+    this.initialOnlyCustom = false,
     required this.onApply,
   });
 
@@ -22,6 +24,7 @@ class _SpellFilterState extends State<SpellFilter> {
   String? selectedClass;
   String? selectedSchool;
   int? selectedLevel;
+  bool onlyCustom = false;
 
   @override
   void initState() {
@@ -29,6 +32,7 @@ class _SpellFilterState extends State<SpellFilter> {
     selectedClass = widget.initialClass;
     selectedSchool = widget.initialSchool;
     selectedLevel = widget.initialLevel;
+    onlyCustom = widget.initialOnlyCustom;
   }
 
   final classes = [
@@ -71,17 +75,34 @@ class _SpellFilterState extends State<SpellFilter> {
               const Text('Classe'),
               Wrap(
                 spacing: 8,
-                children: classes.map((c) {
-                  return ChoiceChip(
-                    label: Text(c),
-                    selected: selectedClass == c,
-                    onSelected: (_) {
+                children: [
+                  ChoiceChip(
+                    label: const Text('Custom'),
+                    selected: onlyCustom, // Ele é controlado pela variável bool
+                    selectedColor: Colors.purpleAccent.withValues(
+                      alpha: 0.4,
+                    ), // Cor de destaque para diferenciar
+                    onSelected: (selected) {
                       setState(() {
-                        selectedClass = c;
+                        onlyCustom = selected;
+                        // Se eu selecionei "Custom", talvez queira desmarcar a classe da API
+                        if (selected) selectedClass = null;
                       });
                     },
-                  );
-                }).toList(),
+                  ),
+
+                  ...classes.map((c) {
+                    return ChoiceChip(
+                      label: Text(c),
+                      selected: selectedClass == c,
+                      onSelected: (_) {
+                        setState(() {
+                          selectedClass = c;
+                        });
+                      },
+                    );
+                  }).toList(),
+                ],
               ),
 
               const SizedBox(height: 16),
@@ -131,6 +152,7 @@ class _SpellFilterState extends State<SpellFilter> {
                           selectedClass = null;
                           selectedSchool = null;
                           selectedLevel = null;
+                          onlyCustom = false;
                         });
                       },
                       child: const Text('Limpar'),
@@ -144,6 +166,7 @@ class _SpellFilterState extends State<SpellFilter> {
                           selectedClass,
                           selectedSchool,
                           selectedLevel,
+                          onlyCustom,
                         );
                         Navigator.pop(context);
                       },

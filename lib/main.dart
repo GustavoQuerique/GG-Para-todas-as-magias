@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/core/theme/app_theme.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/datasources/local/api_cache_service.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/class_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/races_repository.dart';
-import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/spell_repository.dart';
+
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_class.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_race.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/inventory/inventory_item.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
 
-import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_list_page.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/splash/splash_screen.dart';
 import 'package:hive_flutter/adapters.dart';
 
 void main() async {
@@ -32,15 +29,7 @@ void main() async {
   await Hive.openBox<DndClass>('classes');
   await Hive.openBox<DndRace>('races');
 
-  final apiCacheService = ApiCacheService(
-    classRepository: ClassRepository(),
-    spellRepository: SpellRepository(),
-    raceRepository: RacesRepository(),
-  );
-
   runApp(const MyApp());
-
-  apiCacheService.initializeCache();
 }
 
 class MyApp extends StatelessWidget {
@@ -52,7 +41,7 @@ class MyApp extends StatelessWidget {
       title: 'Grimório Arcano',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.darkTheme,
-      home: SpellListPage(),
+      home: const SplashScreen(),
     );
   }
 }
