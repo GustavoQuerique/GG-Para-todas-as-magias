@@ -37,6 +37,8 @@ dependencies:
   fab_circular_menu_plus: 
   font_awesome_flutter: ^11.0.0
   lottie: ^3.3.2
+  intl: ^0.20.2
+  image_picker: ^1.2.1
 dev_dependencies:
   flutter_test:
     sdk: flutter

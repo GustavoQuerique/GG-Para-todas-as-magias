@@ -137,6 +137,9 @@ class CharacterSheet extends HiveObject {
   @HiveField(34)
   Map<String, Map<String, dynamic>?> equippedItems = {};
 
+  @HiveField(35)
+  String? imagePath;
+
   CharacterSheet({
     required this.name,
     required this.level,
@@ -173,6 +176,7 @@ class CharacterSheet extends HiveObject {
     List<Map<String, dynamic>>? inventoryGridItems,
     int? inventoryTypeIndex,
     Map<String, Map<String, dynamic>>? equippedItems,
+    this.imagePath,
   }) : proficientSkills = proficientSkills ?? [],
        spellsByLevel =
            spellsByLevel ??
@@ -382,6 +386,8 @@ class CharacterSheet extends HiveObject {
 
       inventoryTypeIndex:
           json['inventoryTypeIndex'] ?? InventoryType.mediumBackpack.index,
+
+      imagePath: json['imagePath'],
     );
   }
 
@@ -450,6 +456,8 @@ class CharacterSheet extends HiveObject {
       'inventoryTypeIndex': inventoryTypeIndex,
 
       'equippedItems': equippedItems,
+
+      'imagePath': imagePath,
     };
   }
 }

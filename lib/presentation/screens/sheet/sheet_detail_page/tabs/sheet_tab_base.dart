@@ -1,5 +1,7 @@
 ///TODO: adicionar ataques e magias rapidas e as personalidades do personagem
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/background_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/class_repository.dart';
@@ -11,6 +13,7 @@ import 'package:guia_de_garlou_para_todas_as_magias/domain/models/dnd_race.dart'
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/buttons/build_dropdown_options.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/inline_editable_field.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/widgets/medieval_card.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SheetTabBase extends StatefulWidget {
   final CharacterSheet sheet;
@@ -26,7 +29,6 @@ class _SheetTabBaseState extends State<SheetTabBase> {
   List<DndRace> availableRaces = [];
   List<DndBackground> availableBackgrounds = [];
 
-  ///Tornar tudo uma so
   bool isLoadingClasses = true;
   bool isLoadingRaces = true;
   bool isLoadingBackground = true;
@@ -78,47 +80,83 @@ class _SheetTabBaseState extends State<SheetTabBase> {
     });
   }
 
+  Future<void> _pickImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+
+    if (image != null) {
+      setState(() {
+        widget.sheet.imagePath = image.path;
+        widget.sheet.save();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          /// NOME DO PERSONAGEM
+          /// --- CARD DE CABEÇALHO (FOTO + NOME) ---
           MedievalCard(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                const Text(
-                  "Nome do Personagem",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
+                GestureDetector(
+                  onTap: _pickImage,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.black26,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: Colors.amber.withOpacity(0.5)),
+                      image: widget.sheet.imagePath != null
+                          ? DecorationImage(
+                              image: FileImage(File(widget.sheet.imagePath!)),
+                              fit: BoxFit.cover,
+                            )
+                          : null,
+                    ),
+                    child: widget.sheet.imagePath == null
+                        ? const Icon(Icons.add_a_photo, color: Colors.amber)
+                        : null,
                   ),
                 ),
-
-                const SizedBox(height: 8),
-
-                InlineEditableField(
-                  value: sheet.name,
-                  style: const TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize:
+                        MainAxisSize.min, // Importante para não quebrar o Row
+                    children: [
+                      const Text(
+                        "Nome do Personagem",
+                        style: TextStyle(fontSize: 14, color: Colors.grey),
+                      ),
+                      InlineEditableField(
+                        value: sheet.name,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            sheet.name = value;
+                            sheet.save();
+                          });
+                        },
+                      ),
+                    ],
                   ),
-                  onChanged: (value) {
-                    setState(() {
-                      sheet.name = value;
-                      sheet.save();
-                    });
-                  },
                 ),
               ],
             ),
-          ),
+          ), // <-- FECHAMENTO DO MEDIEVAL CARD DO TOPO
 
           const SizedBox(height: 16),
 
-          ///INFORMAÇÕES PRINCIPAIS
+          /// --- INFORMAÇÕES PRINCIPAIS ---
           MedievalCard(
             child: Column(
               children: [
@@ -133,82 +171,41 @@ class _SheetTabBaseState extends State<SheetTabBase> {
                     });
                   },
                 ),
-
                 const Divider(),
-
-                ///Dropdown das raças
                 SheetDropdown(
                   label: "Raças",
                   currentValue: sheet.raceIndex,
                   options: availableRaces
                       .map(
-                        (dndRaces) => SheetDropdownOption(
-                          value: dndRaces.index,
-                          label: dndRaces.name,
-                        ),
+                        (r) =>
+                            SheetDropdownOption(value: r.index, label: r.name),
                       )
                       .toList(),
                   onChanged: (value) async {
                     if (value == null) return;
-
                     sheet.raceIndex = value;
                     await sheet.save();
-
                     setState(() {});
                   },
                 ),
-
                 const Divider(),
-
-                ///Dropdown das classes
                 SheetDropdown(
                   label: "Classes",
                   currentValue: sheet.classIndex,
                   options: availableClasses
                       .map(
-                        (dndClass) => SheetDropdownOption(
-                          value: dndClass.index,
-                          label: dndClass.name,
-                        ),
+                        (c) =>
+                            SheetDropdownOption(value: c.index, label: c.name),
                       )
                       .toList(),
                   onChanged: (value) async {
                     if (value == null) return;
-
                     sheet.classIndex = value;
                     await sheet.save();
-
                     setState(() {});
                   },
                 ),
-
                 const Divider(),
-
-                ///Dropdown dos BackGround
-                ///
-                SheetDropdown(
-                  label: "Antecedentes",
-                  currentValue: sheet.backgroundIndex,
-                  options: availableBackgrounds
-                      .map(
-                        (dndBackground) => SheetDropdownOption(
-                          value: dndBackground.index,
-                          label: dndBackground.name,
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) async {
-                    if (value == null) return;
-
-                    sheet.backgroundIndex = value;
-                    await sheet.save();
-
-                    setState(() {});
-                  },
-                ),
-
-                const Divider(),
-
                 _buildInfoRow(
                   title: "Alinhamento",
                   value: sheet.alignment ?? "Não definido",
@@ -225,7 +222,7 @@ class _SheetTabBaseState extends State<SheetTabBase> {
 
           const SizedBox(height: 16),
 
-          /// VIDA
+          /// --- STATUS (CA, INICIATIVA, ETC) ---
           GridView.count(
             crossAxisCount: 2,
             shrinkWrap: true,
@@ -257,7 +254,7 @@ class _SheetTabBaseState extends State<SheetTabBase> {
                 },
               ),
               _buildStatCard(
-                title: 'Velocidade em M/S',
+                title: 'Velocidade',
                 value: sheet.speed.toString(),
                 icon: Icons.directions_run,
                 onChanged: (val) {
@@ -271,14 +268,14 @@ class _SheetTabBaseState extends State<SheetTabBase> {
                 title: 'Proficiência',
                 value: sheet.proficiencyBonus.toString(),
                 icon: Icons.auto_awesome,
-                onChanged: (val) {
-                  setState(() {});
-                },
+                onChanged: (val) {},
               ),
             ],
           ),
+
           const SizedBox(height: 16),
 
+          /// --- VIDA ---
           MedievalCard(
             child: Column(
               children: [
@@ -293,9 +290,7 @@ class _SheetTabBaseState extends State<SheetTabBase> {
                     });
                   },
                 ),
-
                 const Divider(),
-
                 _buildInfoRow(
                   title: "Vida Atual",
                   value: sheet.currentHp.toString(),
@@ -312,92 +307,65 @@ class _SheetTabBaseState extends State<SheetTabBase> {
           ),
 
           const SizedBox(height: 16),
-
-          MedievalCard(
-            child: _buildDeathSaves(),
-          ),
-
+          MedievalCard(child: _buildDeathSaves()),
           const SizedBox(height: 24),
 
+          /// --- ROLEPLAY ---
           const Text(
             "Roleplay",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
-
           const SizedBox(height: 12),
-
           MedievalCard(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 _buildMultilineField(
                   title: "Traços de Personalidade",
                   value: sheet.personalityTraits ?? '',
-                  onChanged: (val) {
-                    setState(() {
-                      sheet.personalityTraits = val;
-                      sheet.save();
-                    });
-                  },
+                  onChanged: (v) => setState(() {
+                    sheet.personalityTraits = v;
+                    sheet.save();
+                  }),
                 ),
-
                 const Divider(),
-
                 _buildMultilineField(
                   title: "Ideais",
                   value: sheet.ideals ?? '',
-                  onChanged: (val) {
-                    setState(() {
-                      sheet.ideals = val;
-                      sheet.save();
-                    });
-                  },
+                  onChanged: (v) => setState(() {
+                    sheet.ideals = v;
+                    sheet.save();
+                  }),
                 ),
-
                 const Divider(),
-
                 _buildMultilineField(
                   title: "Vínculos",
                   value: sheet.bonds ?? '',
-                  onChanged: (val) {
-                    setState(() {
-                      sheet.bonds = val;
-                      sheet.save();
-                    });
-                  },
+                  onChanged: (v) => setState(() {
+                    sheet.bonds = v;
+                    sheet.save();
+                  }),
                 ),
-
                 const Divider(),
-
                 _buildMultilineField(
                   title: "Defeitos",
                   value: sheet.flaws ?? '',
-                  onChanged: (val) {
-                    setState(() {
-                      sheet.flaws = val;
-                      sheet.save();
-                    });
-                  },
+                  onChanged: (v) => setState(() {
+                    sheet.flaws = v;
+                    sheet.save();
+                  }),
                 ),
               ],
             ),
           ),
-
           const SizedBox(height: 16),
-
           MedievalCard(
             child: _buildMultilineField(
-              title: "História do Personagem",
+              title: "História",
               value: sheet.backStory ?? '',
-              onChanged: (val) {
-                setState(() {
-                  sheet.backStory = val;
-                  sheet.save();
-                });
-              },
+              onChanged: (v) => setState(() {
+                sheet.backStory = v;
+                sheet.save();
+              }),
             ),
           ),
         ],

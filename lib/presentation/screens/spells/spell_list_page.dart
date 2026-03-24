@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/data/repositories/spell_repository.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/spell_model.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/create_spells/spell_creator.dart';
+import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/diary/diary_list_viewer_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/favorites/favorites_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/sheet/sheet_viewer_page.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/presentation/screens/spells/spell_detail_page.dart';
@@ -182,7 +183,14 @@ class _SpellListPageState extends State<SpellListPage> {
                         ActionButton(
                           icon: Icons.book,
                           label: 'Diário',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const DiaryListViewerPage(),
+                              ),
+                            );
+                          },
                         ),
                       ],
                     ),
@@ -281,9 +289,9 @@ class _SpellListPageState extends State<SpellListPage> {
   Widget _getSchoolIcon(String school, Color color) {
     switch (school.toLowerCase()) {
       case 'evocation':
-        return Icon(Icons.local_fire_department, color: color);
-      case 'conjuration':
         return Icon(Icons.auto_fix_high, color: color);
+      case 'conjuration':
+        return Icon(Icons.blur_on, color: color);
       case 'abjuration':
         return Icon(Icons.shield, color: color);
       case 'divination':
@@ -299,8 +307,8 @@ class _SpellListPageState extends State<SpellListPage> {
           size: 20,
         ); // FontAwesome
       case 'transmutation':
-        return FaIcon(
-          FontAwesomeIcons.atom,
+        return Icon(
+          Icons.transform,
           color: color,
           size: 20,
         ); // FontAwesome

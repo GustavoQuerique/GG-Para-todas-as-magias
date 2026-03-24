@@ -2,6 +2,8 @@
 ///um personagem completamente aleatorio;
 ///mas primeiro preciso terminar os modelos das tabs.
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:guia_de_garlou_para_todas_as_magias/domain/models/character_sheet.dart';
 import 'package:hive_flutter/hive_flutter.dart';
@@ -39,13 +41,22 @@ class SheetViewerPage extends StatelessWidget {
               return Card(
                 margin: const EdgeInsets.all(8),
                 child: ListTile(
+                  leading: CircleAvatar(
+                    backgroundColor: Colors.grey.shade800,
+                    backgroundImage: sheet.imagePath != null
+                        ? FileImage(File(sheet.imagePath!))
+                        : null,
+                    child: sheet.imagePath == null
+                        ? const Icon(Icons.person, color: Colors.white54)
+                        : null,
+                  ),
                   title: Text(sheet.name),
                   subtitle: Text(
                     "${sheet.raceIndex ?? 'Raça'} • "
                     "${sheet.classIndex ?? 'Classe'} • "
                     "Nível ${sheet.level}",
                   ),
-                  trailing: const Icon(Icons.arrow_forward_ios),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 16),
                   onTap: () {
                     Navigator.push(
                       context,
